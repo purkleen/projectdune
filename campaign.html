@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign — Lunio</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: #0d0d0f;
+      --panel-2: #141416;
+      --panel-inset: #0a0a0b;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.12);
+      --text: #fafafa;
+      --muted: #8a8a92;
+      --muted-2: #66666e;
+      --purple: #8b5cf6;
+      --purple-bright: #a78bfa;
+      --purple-soft: #7c74f0;
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --green: #22c55e;
+      --cyan: #22d3ee;
+      --radius: 14px;
+      --mono: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* slight ease-in animation when sections change size (View Transitions) */
+    ::view-transition-old(root), ::view-transition-new(root) {
+      animation-duration: 300ms;
+      animation-timing-function: ease-in;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ---------------- Sidebar ---------------- */
+    .sidebar {
+      width: 232px;
+      flex: 0 0 232px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; }
+    .brand-logo {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0 30%, #1a1a1d 55% 100%);
+      position: relative; flex: 0 0 40px;
+      border: 1px solid var(--border-strong);
+    }
+    .brand-logo::after {
+      content: ""; position: absolute; top: 7px; right: 7px;
+      width: 7px; height: 7px; border-radius: 50%; background: var(--purple-bright);
+    }
+    .brand-name { font-weight: 600; font-size: 15px; }
+    .brand-sub { color: var(--muted); font-size: 12px; }
+    .brand-caret { margin-left: auto; color: var(--muted-2); }
+
+    .nav-label { color: var(--muted-2); font-size: 12px; padding: 10px 8px 6px; letter-spacing: .01em; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 8px; border-radius: 9px; color: #d4d4d8;
+      text-decoration: none; font-size: 14px; cursor: pointer;
+    }
+    .nav-item:hover { background: var(--panel-2); color: var(--text); }
+    .nav-item svg { flex: 0 0 18px; color: #a1a1aa; }
+    .nav-item .chev { margin-left: auto; color: var(--muted-2); }
+
+    .sidebar-spacer { flex: 1; }
+    .sidebar-bottom { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; }
+    .persona {
+      display: flex; align-items: center; gap: 11px; padding: 9px 8px;
+      border-radius: 10px; margin-top: 6px; cursor: pointer;
+    }
+    .persona:hover { background: var(--panel-2); }
+    .persona-ava {
+      width: 34px; height: 34px; border-radius: 50%; flex: 0 0 34px;
+      border: 1px solid var(--border-strong); display: grid; place-items: center;
+      font-size: 12px; color: var(--muted); background: var(--panel);
+    }
+    .persona-label { font-size: 11px; color: var(--muted); }
+    .persona-name { font-size: 13px; color: var(--text); }
+    .persona-caret { margin-left: auto; color: var(--muted-2); }
+
+    /* ---------------- Main ---------------- */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 12px 48px; background: rgba(5,5,5,0.86); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer;
+    }
+    .crumb { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .crumb .cur { color: var(--text); font-weight: 500; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .select {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; min-width: 150px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 9px; color: var(--text);
+      font-size: 13px; cursor: pointer;
+    }
+    .select svg { margin-left: auto; color: var(--muted-2); }
+    .select.date { min-width: auto; }
+    .bell { position: relative; }
+    .bell .dot {
+      position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff;
+      font-size: 10px; min-width: 15px; height: 15px; border-radius: 8px; display: grid; place-items: center;
+      padding: 0 3px; border: 2px solid var(--bg);
+    }
+    .ask {
+      padding: 8px 16px; border-radius: 9px; border: none; cursor: pointer;
+      background: var(--purple); color: #fff; font-weight: 600; font-size: 13px;
+    }
+
+    .content { padding: 24px 48px 48px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* Where it leaks */
+    .leaks-sub { color: var(--muted); font-size: 12px; margin-top: 6px; max-width: 560px; }
+    .leaks-sample { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted-2); white-space: nowrap; }
+    .leaks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+    @media (max-width: 980px) { .leaks-grid { grid-template-columns: 1fr; } }
+    .leaks-card { border: 1px solid var(--border-strong); border-radius: 12px; background: var(--panel-inset); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+    .leaks-card.wide { grid-column: 1 / -1; }
+    .leaks-card-title { font-family: var(--mono); font-size: 13px; font-weight: 600; color: #fff; padding: 14px 16px 4px; }
+    .leaks-head, .leaks-row { display: grid; grid-template-columns: minmax(0,1fr) 100px 150px 74px 24px; align-items: center; padding-left: 16px; padding-right: 16px; }
+    .leaks-head { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted-2); padding-top: 13px; padding-bottom: 13px; border-bottom: 1px solid var(--border); }
+    .leaks-row { padding-top: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+    .lk-name { font-family: var(--mono); font-size: 13.5px; color: #ececec; }
+    .lk-tag { display: inline-block; margin-top: 9px; font-family: var(--mono); font-size: 11px; color: var(--muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: 3px 9px; }
+    .lk-tag.prob { border-style: dashed; }
+    .lk-spend { font-family: var(--mono); font-weight: 700; color: #f87171; font-size: 14.5px; text-align: right; padding-right: 18px; }
+    .lk-bar { height: 7px; background: #26262a; border-radius: 2px; overflow: hidden; }
+    .lk-bar i { display: block; height: 100%; background: #dc2626; }
+    .lk-pct { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-align: right; margin-top: 6px; }
+    .lk-clicks { font-family: var(--mono); font-size: 13px; color: #ddd; text-align: right; padding-right: 10px; }
+    .lk-plus { color: var(--muted-2); text-align: right; font-family: var(--mono); }
+    .leaks-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 13px 16px; margin-top: auto; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: #8a8a92; border-top: 1px solid var(--border); }
+    .leaks-open { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0; color: #ddd; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .leaks-open:hover { color: #fff; }
+
+    /* What to do */
+    .todo-card { border: 1px solid var(--border-strong); border-radius: 12px; background: var(--panel-inset); padding: 20px 22px; margin-top: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+    .todo-card.primary { border-color: rgba(255,255,255,0.45); }
+    .todo-title { font-size: 15px; font-weight: 600; }
+    .todo-desc { color: var(--muted); font-size: 12.5px; line-height: 1.55; margin-top: 8px; max-width: 560px; }
+    .todo-meta { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--muted-2); margin-top: 13px; }
+    .todo-right { display: flex; flex-direction: column; align-items: flex-end; gap: 13px; flex: 0 0 auto; margin-left: auto; }
+    .todo-gain { font-family: var(--mono); font-weight: 700; font-size: 21px; color: #4ade80; line-height: 1; text-align: right; }
+    .todo-gain small { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; color: var(--muted-2); font-weight: 400; margin-top: 5px; }
+    .todo-foot { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 16px 20px; margin-top: 14px; font-size: 13px; color: #d4d4d8; }
+    .todo-foot b { color: #fff; }
+    .todo-foot .mono-line { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+    /* What it did (value ledger) */
+    .ledger { margin-top: 20px; }
+    .ledger-item { position: relative; padding: 0 0 26px 32px; }
+    .ledger-item::before { content: ""; position: absolute; left: 6px; top: 16px; bottom: -4px; width: 1px; background: var(--border-strong); }
+    .ledger-item:last-child::before { display: none; }
+    .ledger-dot { position: absolute; left: 0; top: 3px; width: 13px; height: 13px; border-radius: 50%; background: #4ade80; border: 2px solid #4ade80; }
+    .ledger-dot.open { background: transparent; border-color: var(--muted-2); }
+    .ledger-date { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted-2); }
+    .ledger-title { font-size: 15px; font-weight: 600; margin-top: 6px; }
+    .ledger-meta { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 7px; }
+    .ledger-meta b { color: #4ade80; font-weight: 700; }
+    .ledger-card { border: 1px solid var(--border-strong); border-radius: 12px; background: var(--panel-inset); padding: 18px 20px; }
+    .ledger-card-title { font-size: 14px; font-weight: 600; }
+    .ledger-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; margin-top: 16px; }
+    .ls-label { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted-2); }
+    .ls-val { font-family: var(--mono); font-size: 19px; font-weight: 700; color: #fff; margin-top: 8px; }
+    .ls-val s { color: var(--muted-2); font-weight: 400; margin-right: 8px; }
+    .ls-val.green { color: #4ade80; }
+    .ledger-note { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 13px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .ledger-note u { text-underline-offset: 3px; }
+    .ledger-empty { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 16px 20px; margin-top: 14px; max-width: 620px; }
+    .ledger-empty b { font-size: 13.5px; }
+    .ledger-empty p { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; line-height: 1.5; }
+
+    /* hidden per design: Performance section + "module by module" block,
+       Lunio summary strips, and the ledger cross-reference note */
+    .perf-section, .modrow, .modules, .ai-sum, .ledger-note { display: none !important; }
+
+    /* hero statement */
+    .hero-statement { font-size: 26px; line-height: 1.35; font-weight: 600; letter-spacing: -0.01em; color: #fff; max-width: 1020px; padding: 4px 2px 0; }
+    .hero-statement .hs-red { color: #ef4444; }
+    .hero-statement .hs-amber { color: var(--orange); }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .card-pad { padding: 22px; }
+
+    /* -------- Header block -------- */
+    .back { display: inline-flex; align-items: center; gap: 9px; color: var(--muted); font-size: 14px; cursor: pointer; }
+    .back:hover { color: var(--text); }
+    .head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .title-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 12px; flex-wrap: wrap; }
+    .camp-title { font-size: 21px; font-weight: 700; margin: 14px 0 12px; letter-spacing: -0.01em; }
+    .title-row .camp-title { margin: 0; }
+    .chips { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      padding: 6px 13px; border-radius: 999px; background: var(--panel-2);
+      border: 1px solid var(--border); font-size: 13px; color: #d4d4d8;
+    }
+    .chip.live { display: inline-flex; align-items: center; gap: 8px; }
+    .chip.live .d { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .subline { color: var(--muted); margin: 14px 0 0; font-size: 12px; }
+    .subline-link { color: #d4d4d8; text-decoration: underline; text-underline-offset: 3px; margin-right: 8px; }
+    .subline-link:hover { color: #fff; }
+    .chip.sm { padding: 3px 10px; font-size: 11px; vertical-align: middle; margin: 0 2px; }
+    .head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 16px; border-radius: 9px; font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    }
+    .btn:hover { border-color: var(--border-strong); }
+    .btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; font-weight: 600; }
+    .btn.primary:hover { background: var(--purple-bright); }
+
+    .divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+    /* -------- Stat cards -------- */
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+    .stat { padding: 4px 26px; border-left: 3px solid var(--sc, #3f3f46); }
+    .stat:first-child { padding-left: 20px; }
+    .stat-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 15px; }
+    .stat-label .ihint { margin-left: 0; }
+    .stat-val { font-size: 24px; line-height: 32px; font-weight: 700; margin: 8px 0 6px; letter-spacing: -0.02em; }
+    .stat-sub { color: var(--muted); font-size: 12px; }
+
+    /* -------- Section titles -------- */
+    .sec-title { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .perf-section { max-height: 700px; overflow: hidden; }
+    .perf-section .chart-block { margin-top: 12px; }
+    .perf-section #clicksChart { height: 150px; }
+    .perf-section #spendChart { height: 88px; }
+    .perf-section #convChart { height: 84px; }
+    .sec-desc { color: var(--muted); margin-top: 6px; font-size: 14px; max-width: 900px; }
+
+    /* -------- Charts -------- */
+    .chart-block { margin-top: 22px; }
+    .chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .chart-name { color: #d4d4d8; font-size: 14px; }
+    .legend { display: flex; gap: 8px; flex-wrap: wrap; }
+    .lg {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #d4d4d8;
+      background: var(--panel-2); border: 1px solid var(--border); padding: 5px 11px; border-radius: 999px;
+    }
+    .lg .d { width: 8px; height: 8px; border-radius: 50%; }
+    #clicksLegend .lg { cursor: pointer; opacity: .4; transition: opacity .12s; }
+    #clicksLegend .lg.on { opacity: 1; }
+    #clicksLegend .lg:hover { border-color: var(--border-strong); }
+    .toggle-group { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+    .toggle-group button {
+      border: none; background: transparent; color: var(--muted); padding: 5px 12px; border-radius: 6px;
+      font-size: 12px; cursor: pointer;
+    }
+    .toggle-group button.on { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+    svg.chart { display: block; width: 100%; height: auto; }
+    .axis { fill: var(--muted-2); font-size: 11px; font-family: inherit; }
+    /* HTML axis labels (crisp 12px, not stretched by the chart's non-uniform SVG scaling) */
+    .chart-wrap { position: relative; }
+    .chart-lbls { position: absolute; inset: 0; pointer-events: none; }
+    .chart-lbl { position: absolute; font-size: 12px; color: var(--muted-2); white-space: nowrap; }
+    .chart-lbl.y { left: 0; width: 4.4%; text-align: right; padding-right: 8px; transform: translateY(-50%); }
+    .chart-lbl.x { bottom: 0; transform: translateX(-50%); }
+    .chart-xaxis { position: relative; height: 18px; margin-top: 2px; }
+    .mod .chart-wrap { flex: 1; min-height: 180px; }
+    #annChart { height: 100%; }
+    #annLbls .chart-lbl.y { width: 6.25%; }
+    /* chart hover indicators */
+    .chart-cross { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.2); transform: translateX(-50%); pointer-events: none; }
+    .chart-dot { position: absolute; width: 9px; height: 9px; border-radius: 50%; transform: translate(-50%,-50%); border: 2px solid var(--bg); pointer-events: none; }
+    .chart-colhl { position: absolute; top: 0; bottom: 0; background: rgba(255,255,255,0.07); border-radius: 4px; pointer-events: none; }
+    .chart-tip { position: fixed; z-index: 200; pointer-events: none; display: none; background: #1c1c22; border: 1px solid var(--border-strong); border-radius: 10px; padding: 9px 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform: translate(-50%, calc(-100% - 14px)); min-width: 148px; }
+    .ct-date { font-size: 13px; color: #fff; font-weight: 500; margin-bottom: 6px; }
+    .ct-row { display: flex; align-items: center; gap: 9px; font-size: 13px; line-height: 1.7; }
+    .ct-sw { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 11px; }
+    .ct-name { color: var(--muted); }
+    .ct-val { color: #fff; margin-left: auto; font-weight: 500; }
+
+    /* -------- Budget / waterfall -------- */
+    .budget-legend { display: grid; grid-template-columns: repeat(10, 1fr); gap: 20px 16px; }
+    .wt { cursor: pointer; user-select: none; border-radius: 8px; transition: opacity .12s; }
+    .wt:hover .wt-name { color: #d4d4d8; }
+    .wt-name { color: var(--muted); font-size: 13px; }
+    .wt-val-row { display: flex; align-items: center; gap: 9px; margin-top: 5px; }
+    .wt-sw { width: 13px; height: 13px; border-radius: 4px; flex: 0 0 13px; border: 1.5px solid transparent; transition: background .12s, border-color .12s; }
+    .wt.off { opacity: .4; }
+    .wt.off .wt-sw { background: transparent !important; border-color: var(--muted-2); }
+    .wt-val { font-size: 17px; font-weight: 600; }
+    .wt-val small { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 4px; }
+
+    .controls-row { display: flex; align-items: center; gap: 22px; justify-content: flex-end; flex-wrap: wrap; }
+    .control { display: flex; align-items: center; gap: 10px; }
+    .control > span { color: var(--muted); font-size: 13px; }
+
+    .sankey { position: relative; margin-top: 32px; height: 430px; }
+    .sankey svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .sk-head { position: absolute; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: #acacac; pointer-events: none; }
+    .sk-lab { position: absolute; font-size: 12.5px; white-space: nowrap; color: #fff; pointer-events: none; }
+    .sk-tip {
+      position: absolute; z-index: 5; pointer-events: none; display: none;
+      transform: translate(14px, -50%); background: #1c1c22; border: 1px solid var(--border-strong);
+      border-radius: 8px; padding: 7px 11px; font-size: 12.5px; white-space: nowrap; color: #d4d4d8;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    }
+    .sk-tip b { color: #fff; margin-left: 7px; }
+    .sk-tip .ar { color: var(--muted-2); margin: 0 4px; }
+    .sk-lab.b { color: #fff; font-weight: 600; }
+    .sk-lab .mut { color: #fff; font-weight: 400; }
+    .sk-lab b { color: #fff; font-weight: 600; }
+
+    /* -------- Module grid -------- */
+    .modrow { display: flex; align-items: center; justify-content: space-between; }
+    .link-btn { color: var(--muted); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+    .link-btn:hover { color: var(--text); }
+
+    .modules { display: grid; grid-template-columns: minmax(0,3fr) minmax(230px,1.05fr); gap: 16px; align-items: start; }
+    .modules.rail-collapsed { grid-template-columns: 1fr; }
+    .mod-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .mod-rail { display: flex; flex-direction: column; gap: 16px; }
+
+    .mod { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; min-width: 0; display: flex; flex-direction: column; }
+    .mod-head { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+    .mod-title { font-size: 16px; font-weight: 600; }
+    .mod-info { color: var(--muted-2); display: inline-flex; }
+    .pill-sample {
+      font-size: 11px; color: var(--muted); background: var(--panel-2);
+      border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px;
+    }
+    .mod-tools { margin-left: auto; display: flex; gap: 10px; color: var(--muted-2); }
+    .mod-head:has(.btn) .mod-tools { margin-left: 12px; }
+    .mod-tools svg { cursor: pointer; }
+    .mod-tools svg:hover { color: var(--text); }
+
+    .tbl-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; padding-bottom: 6px; }
+    .bar-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 12px; margin: 4px 0; border-radius: 8px; overflow: hidden; max-height: 32px; }
+    .bar-row .fill { position: absolute; inset: 0 auto 0 0; border-radius: 8px; z-index: 0; }
+    .bar-row.red .fill { background: rgba(220,38,38,0.22); }
+    .bar-row.purple .fill { background: rgba(139,92,246,0.24); }
+    .bar-row .lbl { position: relative; z-index: 1; color: var(--text); font-size: 12px; }
+    .bar-row .meta { position: relative; z-index: 1; color: var(--muted); font-size: 12px; margin-left: auto; }
+    .bar-row .num { position: relative; z-index: 1; color: var(--text); font-size: 14px; width: 34px; text-align: right; }
+    .row-count { color: var(--text); font-size: 14px; width: 30px; text-align: right; flex: 0 0 30px; }
+    .rowwrap { display: flex; align-items: center; gap: 10px; }
+
+    .tag { font-size: 12px; color: #d4d4d8; background: var(--panel-2); border: 1px solid var(--border); padding: 4px 9px; border-radius: 6px; }
+    .tag.mono { font-family: inherit; font-size: 11px; }
+    .foot-note { color: var(--muted); font-size: 13px; margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .mod-caption { color: var(--muted); font-size: 12px; margin-top: auto; padding-top: 14px; }
+
+    /* heatmap */
+    .heat { display: grid; grid-template-columns: 42px repeat(6, 1fr); grid-template-rows: auto repeat(7, 1fr); gap: 6px; flex: 1; min-height: 0; }
+    .heat .col-h { color: var(--muted); font-size: 11px; text-align: center; }
+    .heat .row-h { color: var(--muted); font-size: 12px; display: flex; align-items: center; }
+    .heat .cell { min-height: 20px; border-radius: 5px; background: #141416; border: 1px solid rgba(255,255,255,0.04); }
+    .heat .cell:hover { outline: 1.5px solid rgba(255,255,255,0.28); outline-offset: -1px; cursor: pointer; }
+    .heat-tip { position: fixed; z-index: 200; pointer-events: none; display: none; transform: translate(-50%, -110%); background: #1c1c22; border: 1px solid var(--border-strong); border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.45; color: #d4d4d8; box-shadow: 0 8px 24px rgba(0,0,0,0.5); white-space: nowrap; text-align: center; }
+    .heat-tip b { color: #fff; }
+
+    /* geo */
+    .mod-head .geo-toggle { margin-left: auto; }
+    .mod-head:has(.geo-toggle) .mod-tools { margin-left: 12px; }
+    .geo-map { background: var(--panel-inset); border: 1px solid var(--border); border-radius: 10px; height: 210px; display: grid; place-items: center; overflow: hidden; }
+    .geo-rank { display: flex; flex-direction: column; gap: 4px; }
+    .geo-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 11px; border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .geo-row .gfill { position: absolute; inset: 0 auto 0 0; background: rgba(220,38,38,0.22); border-radius: 8px; z-index: 0; }
+    .geo-row .grank { position: relative; z-index: 1; color: var(--muted-2); width: 16px; }
+    .geo-row .gname { position: relative; z-index: 1; margin-right: auto; }
+    .geo-row .gval { position: relative; z-index: 1; color: var(--muted); }
+
+    /* info hover note */
+    .ihint { position: relative; display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px; color: var(--muted-2); cursor: pointer; }
+    .ihint:hover { color: var(--muted); }
+    .ihint-box { position: absolute; top: calc(100% + 8px); left: 0; width: 300px; max-width: 62vw; background: #1c1c22; border: 1px solid var(--border-strong); border-radius: 10px; padding: 11px 13px; font-size: 13px; font-weight: 400; line-height: 1.5; letter-spacing: normal; color: #d4d4d8; box-shadow: 0 12px 34px rgba(0,0,0,0.5); display: none; z-index: 40; }
+    .ihint:hover .ihint-box { display: block; }
+    .ihint-box--r { left: auto; right: 0; }
+
+    /* module card info hover + pointer cursor */
+    .modules .mod { cursor: pointer; }
+    .mod-info { position: relative; display: inline-flex; align-items: center; vertical-align: middle; cursor: pointer; }
+    .mod-info:hover { color: var(--muted); }
+    .mod-info:hover .ihint-box { display: block; }
+
+    /* donut legend — donut on the left, values stacked on the right */
+    .donut-wrap { flex: 1; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 22px; }
+    .donut-fig { position: relative; }
+    .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+    .donut-center .val { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.01em; line-height: 1; }
+    .donut-center .cap { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 12px; font-size: 13px; }
+    .donut-legend .li { display: flex; align-items: flex-start; gap: 8px; color: #d4d4d8; }
+    .donut-legend .d { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; margin-top: 5px; }
+    .donut-legend .txt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 2px; }
+    .donut-legend .sub { color: var(--muted); white-space: nowrap; }
+
+    /* switch */
+    .switch { width: 40px; height: 22px; border-radius: 999px; background: var(--purple); position: relative; cursor: pointer; }
+    .switch::after { content: ""; position: absolute; top: 2px; left: 20px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+
+    .rail-desc { color: var(--muted); font-size: 13px; margin: 6px 0 14px; }
+    .receipt { border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; background: var(--panel-inset); }
+    .receipt .r-title { font-size: 14px; }
+    .receipt .r-sub { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .empty { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+    /* -------- Ask Lunio affordances + AI panel -------- */
+    .sec-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .ask-sm {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--purple-bright);
+      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    }
+    .ask-sm:hover { border-color: var(--purple); background: rgba(139,92,246,0.12); }
+    .mod-tools .ask-ico { color: var(--purple-bright); }
+    .mod-tools .ask-ico:hover { color: var(--purple); }
+
+    /* AI summary strip with actionable items */
+    .ai-sum { display: flex; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.22); }
+    .ai-sum-ico { color: var(--purple-bright); flex: 0 0 16px; margin-top: 1px; }
+    .ai-sum-body { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+    .ai-sum-txt { font-size: 12.5px; line-height: 1.5; color: #d4d4d8; }
+    .ai-sum-txt b { color: var(--purple-bright); font-weight: 600; }
+    .ai-sum-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ai-act { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(139,92,246,0.35); background: transparent; color: #d4d4d8; font-size: 12px; cursor: pointer; }
+    .ai-act:hover { background: rgba(139,92,246,0.15); color: #fff; }
+    .ai-act svg { color: var(--purple-bright); }
+    .ai-sum-close { margin-left: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 2px 4px; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .ai-sum-close:hover { color: #fff; }
+
+    /* section filter dropdown */
+    .filter-wrap { position: relative; }
+    .filter-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel-2); color: #d4d4d8; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .filter-btn:hover { border-color: var(--border-strong); }
+    .filter-btn > svg { color: var(--muted-2); }
+    .fc { font-size: 11px; color: var(--muted); background: var(--panel-inset); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; }
+    .filter-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 252px; background: var(--panel); border: 1px solid var(--border-strong); border-radius: 12px; padding: 8px; z-index: 60; box-shadow: 0 18px 50px rgba(0,0,0,0.5); display: none; }
+    .filter-menu.open { display: block; }
+    .fm-head { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+    .fm-title { font-size: 11px; letter-spacing: .08em; color: var(--muted-2); }
+    .fm-actions { display: flex; gap: 12px; }
+    .fm-act { font-size: 12px; color: var(--purple-bright); cursor: pointer; background: none; border: none; padding: 0; }
+    .fm-act:hover { color: var(--purple); }
+    .fm-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #d4d4d8; }
+    .fm-item:hover { background: var(--panel-2); }
+    .fm-check { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--muted-2); flex: 0 0 16px; display: grid; place-items: center; }
+    .fm-check svg { color: #fff; opacity: 0; }
+    .fm-item.on .fm-check { background: var(--purple); border-color: var(--purple); }
+    .fm-item.on .fm-check svg { opacity: 1; }
+
+    .ai-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 90; }
+    .ai-overlay.open { opacity: 1; pointer-events: auto; }
+    .ai-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 92vw;
+      background: var(--panel); border-left: 1px solid var(--border-strong);
+      display: flex; flex-direction: column; transform: translateX(100%);
+      transition: transform .26s cubic-bezier(.4,0,.2,1); z-index: 100;
+    }
+    .ai-panel.open { transform: translateX(0); box-shadow: -24px 0 60px rgba(0,0,0,0.55); }
+    .ai-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+    .ai-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
+    .ai-title svg { color: var(--purple-bright); }
+    .ai-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+    .ai-close:hover { color: var(--text); border-color: var(--border-strong); }
+    .ai-ctx { margin: 14px 20px 0; padding: 7px 12px; border-radius: 8px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: var(--purple-bright); font-size: 12px; align-self: flex-start; }
+    .ai-msgs { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 86%; padding: 11px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
+    .msg.ai { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg.user { align-self: flex-end; background: var(--purple); color: #fff; border-bottom-right-radius: 4px; }
+    .msg.typing { color: var(--muted); letter-spacing: 3px; }
+    .ai-suggest { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 12px; }
+    .ai-sug { font-size: 12px; color: #d4d4d8; background: var(--panel-2); border: 1px solid var(--border); padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+    .ai-sug:hover { border-color: var(--purple); color: #fff; }
+    .ai-input { display: flex; align-items: flex-end; gap: 10px; padding: 14px 20px 18px; border-top: 1px solid var(--border); }
+    .ai-input textarea { flex: 1; resize: none; background: var(--panel-inset); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 11px 13px; font: inherit; font-size: 13.5px; max-height: 120px; }
+    .ai-input textarea:focus { outline: none; border-color: var(--purple); }
+    .ai-send { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 10px; border: none; background: var(--purple); color: #fff; font-size: 17px; cursor: pointer; }
+    .ai-send:hover { background: var(--purple-bright); }
+    .mod-tools .max-ico { color: var(--muted-2); }
+    .mod-tools .max-ico:hover { color: var(--text); }
+
+    .max-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; place-items: center; z-index: 110; padding: 40px; }
+    .max-overlay.open { display: grid; }
+    .max-box { position: relative; width: min(1100px, 94vw); max-height: 90vh; overflow: auto; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 16px; padding: 8px; box-shadow: 0 30px 90px rgba(0,0,0,0.6); }
+    .max-close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); font-size: 21px; line-height: 1; cursor: pointer; }
+    .max-close:hover { color: var(--text); border-color: var(--border-strong); }
+    .max-body .mod { border: none; background: transparent; padding: 22px 26px; }
+    .max-body .mod-title { font-size: 20px; }
+
+    @media (max-width: 1180px) {
+      .modules { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 820px) {
+      .content { padding: 20px; }
+      .topbar { padding: 12px 20px; }
+      .sidebar { display: none; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"></div>
+      <div>
+        <div class="brand-name">Lunio</div>
+        <div class="brand-sub">Traffic intelligence</div>
+      </div>
+      <span class="brand-caret">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+      </span>
+    </div>
+
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15z"/></svg>Assistant</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Pulse</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M9 6v3l2 1"/><circle cx="17" cy="16" r="3"/></svg>Waste Hub</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M9 20V4M14 20v-7M19 20v-11"/></svg>Analyze</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/></svg>Protect</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Proof</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l2 2 3-3M4 12l2 2 3-3M4 18l2 2 3-3M13 6h7M13 12h7M13 18h7"/></svg>Actions</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg>Agent work<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M6 8a8 8 0 000 8M18 8a8 8 0 010 8M3.5 5.5a12 12 0 000 13M20.5 5.5a12 12 0 010 13"/></svg>Signal &amp; MCP</a>
+    <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h6v16H6a2 2 0 00-2 2V5zM20 5a2 2 0 00-2-2h-4v16h4a2 2 0 012 2V5z"/></svg>Story builder</a>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="sidebar-bottom">
+      <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</a>
+      <a class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 013.9-1.6c1.4.9.9 2.4-.4 3.1-.9.5-1 1-1 1.7M12 17h.01"/></svg>Help</a>
+      <div class="persona">
+        <div class="persona-ava">CA</div>
+        <div>
+          <div class="persona-label">Viewing as</div>
+          <div class="persona-name">Client A - B2B …</div>
+        </div>
+        <span class="persona-caret">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+      <div class="crumb">Lunio <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg> Campaigns <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg> <span class="cur">Debt Consolidation - Broad</span></div>
+      <div class="topbar-right">
+        <div class="select">Default workspace <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="select">All platforms <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="select date"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> Jun 10, 2026 - Jul 10, 2026</div>
+        <button class="icon-btn bell"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 1112 0c0 4 1.5 5 2 6H4c.5-1 2-2 2-6zM10 20a2 2 0 004 0"/></svg><span class="dot">2</span></button>
+        <button class="ask" data-ask="">Ask Lunio</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- ============ HERO STATEMENT ============ -->
+      <div class="hero-statement">This campaign spent $109.5K.<br><span class="hs-red">57.6% went to traffic that was never going to convert.</span> <span class="hs-amber">$23.2K of it is still yours to keep.</span></div>
+
+      <!-- ============ HEADER CARD ============ -->
+      <section class="card card-pad">
+        <div class="head-top">
+          <div>
+            <span class="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg> Back to Waste Hub</span>
+            <div class="title-row">
+              <h1 class="camp-title">Debt Consolidation - Broad</h1>
+              <span class="chip live"><span class="d"></span> Live</span>
+            </div>
+            <p class="subline"><a href="#" class="subline-link">Atlas Working Capital</a> <span class="chip sm">Search</span> <span class="chip sm"><svg width="11" height="11" viewBox="0 0 24 24" style="vertical-align:-1px; margin-right:5px"><path d="M12 3.6 L5.3 18.2" stroke="#FBBC04" stroke-width="5.6" stroke-linecap="round"/><path d="M12 3.6 L18.7 18.2" stroke="#4285F4" stroke-width="5.6" stroke-linecap="round"/><circle cx="5.3" cy="18.2" r="2.8" fill="#34A853"/></svg>Google Ads</span> · $4.1K/day budget · 9% IS lost to budget</p>
+          </div>
+          <div class="head-actions">
+            <button class="btn primary">Protect campaign</button>
+            <button class="btn">Add negatives pack</button>
+            <button class="btn">Pause campaign</button>
+            <button class="ask-sm" data-ask=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3z"/></svg> Ask about this campaign</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stats">
+          <div class="stat" style="--sc:#3f3f46">
+            <div class="stat-label">Spend <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">Total amount spent on this campaign across the selected date range.</span></span></div>
+            <div class="stat-val">$109.5K</div>
+            <div class="stat-sub">in the selected period</div>
+          </div>
+          <div class="stat" style="--sc:var(--red)">
+            <div class="stat-label">Waste detected <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">Spend attributed to invalid, suspicious or low-value traffic that Lunio detected.</span></span></div>
+            <div class="stat-val">$63.1K</div>
+            <div class="stat-sub">57.6% of spend</div>
+          </div>
+          <div class="stat" style="--sc:var(--orange)">
+            <div class="stat-label">Still recoverable <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">The share of detected waste you can still reclaim by turning protection on.</span></span></div>
+            <div class="stat-val">$23.2K</div>
+            <div class="stat-sub">with protection on</div>
+          </div>
+          <div class="stat" style="--sc:#b91c1c">
+            <div class="stat-label">Unrecoverable <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">Detected waste that can no longer be reclaimed &mdash; spend lost to invalid traffic before protection was in place.</span></span></div>
+            <div class="stat-val">$35.7K</div>
+            <div class="stat-sub">of detected waste</div>
+          </div>
+          <div class="stat" style="--sc:var(--green)">
+            <div class="stat-label">Conversions <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box ihint-box--r">Recorded conversions in the selected period, with the average cost per conversion.</span></span></div>
+            <div class="stat-val">1.8K</div>
+            <div class="stat-sub">$61.7 per conversion</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PERFORMANCE ============ -->
+      <section class="card card-pad perf-section">
+        <div class="sec-row">
+          <div class="sec-title">Performance <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">Traffic, spend and conversions on one date axis - the markers are recorded changes to this campaign.</span></span></div>
+          <div style="display:flex; align-items:center; gap:14px">
+            <div class="filter-wrap">
+              <button class="filter-btn" id="perfFilterBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg> Charts <span class="fc"></span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="filter-menu" id="perfFilterMenu"></div>
+            </div>
+            <button class="ask-sm" data-ask="Performance"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3z"/></svg> Ask Lunio</button>
+          </div>
+        </div>
+
+        <div class="ai-sum">
+          <svg class="ai-sum-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
+          <div class="ai-sum-body">
+            <span class="ai-sum-txt"><b>Lunio summary</b> &mdash; Clicks are steady at ~3K/day but 19.6% stay invalid (~570 wasted clicks daily). Conversions track spend closely, so cutting waste lowers your $61.7 CPA directly.</span>
+            <div class="ai-sum-actions">
+              <button class="ai-act" data-ask="Attack timing windows"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> Block Wed&ndash;Thu evening attack windows</button>
+              <button class="ai-act" data-ask="Negatives pack"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Add negatives pack (saves ~$300/mo)</button>
+              <button class="ai-act" data-ask="Protection plan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/></svg> Protect campaign to stabilize CPA</button>
+            </div>
+          </div>
+          <button class="ai-sum-close" aria-label="Dismiss summary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg> Close</button>
+        </div>
+
+        <div class="chart-block">
+          <div class="chart-head">
+            <div class="chart-name">Clicks per day</div>
+            <div class="legend" id="clicksLegend">
+              <span class="lg on" data-series="total"><span class="d" style="background:var(--purple-bright)"></span>Total</span>
+              <span class="lg" data-series="valid"><span class="d" style="background:var(--green)"></span>Valid</span>
+              <span class="lg" data-series="suspicious"><span class="d" style="background:var(--orange)"></span>Suspicious</span>
+              <span class="lg on" data-series="invalid"><span class="d" style="background:var(--red)"></span>Invalid</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><svg class="chart" id="clicksChart" viewBox="0 0 1000 250" preserveAspectRatio="none"></svg><div class="chart-lbls" id="clicksLbls"></div></div>
+          <div class="chart-xaxis" id="clicksXaxis"></div>
+        </div>
+
+        <div class="chart-block">
+          <div class="chart-head"><div class="chart-name">Spend per day</div></div>
+          <div class="chart-wrap"><svg class="chart" id="spendChart" viewBox="0 0 1000 170" preserveAspectRatio="none"></svg><div class="chart-lbls" id="spendLbls"></div></div>
+          <div class="chart-xaxis" id="spendXaxis"></div>
+        </div>
+
+        <div class="chart-block">
+          <div class="chart-head">
+            <div class="chart-name">Conversions per day</div>
+            <div class="toggle-group"><button class="on">Conversions</button><button>CPA</button></div>
+          </div>
+          <div class="chart-wrap"><svg class="chart" id="convChart" viewBox="0 0 1000 170" preserveAspectRatio="none"></svg><div class="chart-lbls" id="convLbls"></div></div>
+          <div class="chart-xaxis" id="convXaxis"></div>
+        </div>
+      </section>
+
+      <!-- ============ WHERE BUDGET GOES ============ -->
+      <section class="card card-pad">
+        <div class="sec-row">
+          <div class="sec-title">Where this budget goes <span class="ihint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="ihint-box">This campaign's share of every waste type the account detects, and how much of it is already recovered. Budget here is clicks x effective CPC - the basis the account waterfall totals spend on, so the bars line up with the hub.</span></span></div>
+          <div style="display:flex; align-items:center; gap:14px">
+            <button class="ask-sm" id="sankeySelectAll" style="color:#d4d4d8"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Select all</button>
+            <button class="ask-sm" data-ask="Where this spend goes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3z"/></svg> Ask Lunio</button>
+          </div>
+        </div>
+
+        <div class="ai-sum">
+          <svg class="ai-sum-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
+          <div class="ai-sum-body">
+            <span class="ai-sum-txt"><b>Lunio summary</b> &mdash; $63.1K of the $116.2K spend is waste (57.6%). Lead quality drives 30% of it, and $23.2K is still recoverable with protection on.</span>
+            <div class="ai-sum-actions">
+              <button class="ai-act" data-ask="Protection plan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z"/></svg> Turn on protection &mdash; reclaim up to $23.2K</button>
+              <button class="ai-act" data-ask="Lead quality waste"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Fix Lead quality leaks ($8.0K recoverable)</button>
+              <button class="ai-act" data-ask="Creative waste"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Review Creative targeting ($9.4K waste)</button>
+            </div>
+          </div>
+          <button class="ai-sum-close" aria-label="Dismiss summary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg> Close</button>
+        </div>
+
+        <div class="divider" style="margin-top:18px"></div>
+
+        <div class="budget-legend" id="budgetLegend"></div>
+
+        <div class="sankey" id="sankey">
+          <svg viewBox="0 -34 1304 414" preserveAspectRatio="none" id="sankeySvg"></svg>
+          <div class="sk-head" style="left:0; top:0">SPEND</div>
+          <div class="sk-head" style="left:49.6%; top:0">WASTE</div>
+          <div class="sk-head" style="right:0; top:0; text-align:right">RECOVERY</div>
+          <div id="skLabels"></div>
+        </div>
+      </section>
+
+      <!-- ============ WHERE IT LEAKS ============ -->
+      <section class="card card-pad leaks-section">
+        <div class="sec-row" style="align-items:flex-start">
+          <div>
+            <div class="sec-title">Where the waste comes from</div>
+            <div class="leaks-sub">Ranked by wasted spend, never click count. Open any row to see the clicks behind it.</div>
+          </div>
+          <span class="leaks-sample">SAMPLED FROM 1,000 CLICKS</span>
+        </div>
+        <div class="leaks-grid" id="leaksGrid"></div>
+      </section>
+
+      <!-- ============ WHAT TO DO ============ -->
+      <section class="card card-pad todo-section">
+        <div class="sec-row" style="align-items:flex-start">
+          <div>
+            <div class="sec-title">What to do</div>
+            <div class="leaks-sub">Each action carries the dollars it's projected to return, so you're choosing between amounts rather than guessing. All are reversible.</div>
+          </div>
+          <span class="leaks-sample">SCOPE: THIS CAMPAIGN</span>
+        </div>
+
+        <div class="todo-card primary">
+          <div>
+            <div class="todo-title">Add negatives pack</div>
+            <div class="todo-desc">Blocks the 42 search terms above that have never produced a conversion in 90 days.</div>
+            <div class="todo-meta">LIVE IN ~4 MIN &middot; REVERSIBLE &middot; TOUCHES 1 AD GROUP</div>
+          </div>
+          <div class="todo-right">
+            <div class="todo-gain">+$8.4K<small>NEXT 30 DAYS</small></div>
+            <button class="btn primary" data-ask="Negatives pack">Add negatives pack</button>
+          </div>
+        </div>
+
+        <div class="todo-card">
+          <div>
+            <div class="todo-title">Block 3 datacentre regions</div>
+            <div class="todo-desc">Ashburn, Council Bluffs and The Dalles are hosting providers, not customers. No human traffic will be lost.</div>
+            <div class="todo-meta">LIVE IMMEDIATELY &middot; REVERSIBLE &middot; IP-LEVEL, NOT GEO-TARGETING</div>
+          </div>
+          <div class="todo-right">
+            <div class="todo-gain">+$7.2K<small>NEXT 30 DAYS</small></div>
+            <button class="btn" data-ask="Datacentre regions">Block regions</button>
+          </div>
+        </div>
+
+        <div class="todo-card">
+          <div>
+            <div class="todo-title">Turn on headless browser protection</div>
+            <div class="todo-desc">Catches automated sessions the platform's own filter is currently passing through.</div>
+            <div class="todo-meta">LIVE IN ~15 MIN &middot; REVERSIBLE &middot; 0.3% FALSE-POSITIVE RATE</div>
+          </div>
+          <div class="todo-right">
+            <div class="todo-gain">+$3.0K<small>NEXT 30 DAYS</small></div>
+            <button class="btn" data-ask="Protection plan">Turn on protection</button>
+          </div>
+        </div>
+
+        <div class="todo-foot">
+          All three recover <b>$18.6K of the $23.2K</b> still open &mdash; and pull cost per conversion to <b>$29.80</b>.
+          <div class="mono-line">$4.6K stays out of reach until brand terms are split out.</div>
+        </div>
+      </section>
+
+      <!-- ============ WHAT IT DID ============ -->
+      <section class="card card-pad ledger-section">
+        <div class="sec-row" style="align-items:flex-start">
+          <div>
+            <div class="sec-title">What it did</div>
+            <div class="leaks-sub">Every action taken here, with the measured before and after. This is what makes the projections above worth believing.</div>
+          </div>
+          <span class="leaks-sample">VALUE LEDGER</span>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-item">
+            <span class="ledger-dot open"></span>
+            <div class="ledger-date">JUL 10, 2026</div>
+            <div class="ledger-title">Paused campaign</div>
+            <div class="ledger-meta">Measuring &mdash; first read Jul 17</div>
+          </div>
+          <div class="ledger-item">
+            <span class="ledger-dot"></span>
+            <div class="ledger-date">JUN 28, 2026</div>
+            <div class="ledger-title">Added 42 negative keywords</div>
+            <div class="ledger-meta">Waste rate 61.3% &rarr; 57.6% &middot; <b>$4.9K/mo recovered</b></div>
+          </div>
+          <div class="ledger-item">
+            <span class="ledger-dot"></span>
+            <div class="ledger-date">JUN 14, 2026</div>
+            <div class="ledger-title">Turned on protection for search partners</div>
+            <div class="ledger-meta">Invalid clicks 214/day &rarr; 88/day &middot; <b>$7.9K/mo recovered</b></div>
+          </div>
+        </div>
+
+        <div class="ledger-card">
+          <div class="ledger-card-title">What those two actions moved at the top of this page</div>
+          <div class="ledger-stats">
+            <div><div class="ls-label">WASTE RATE</div><div class="ls-val"><s>61.3%</s>57.6%</div></div>
+            <div><div class="ls-label">INVALID CLICKS PER DAY</div><div class="ls-val"><s>214</s>88</div></div>
+            <div><div class="ls-label">RECOVERED TO DATE</div><div class="ls-val green">$12.8K</div></div>
+          </div>
+          <div class="ledger-note">&#8635; This is the amber band in <u>Where this budget goes</u>. Take an action in <u>What to do</u> and it lands here, then moves that band.</div>
+        </div>
+
+        <div class="ledger-empty">
+          <b>No budget or bid changes recorded in this range.</b>
+          <p>Annotate a change and it appears on every chart in Lunio, so your edits stay separable from ours.</p>
+        </div>
+      </section>
+
+      <!-- ============ MODULE BY MODULE ============ -->
+      <div class="modrow">
+        <div class="sec-title">This campaign, module by module</div>
+        <div style="display:flex; align-items:center; gap:14px">
+          <div class="filter-wrap">
+            <button class="filter-btn" id="secFilterBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg> Sections <span class="fc"></span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="filter-menu" id="secFilterMenu"></div>
+          </div>
+          <button class="ask-sm" data-ask="Campaign modules"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3z"/></svg> Ask Lunio</button>
+        </div>
+      </div>
+
+      <div class="modules">
+        <div class="mod-main">
+          <!-- Row 1: keyword + search term -->
+          <div class="grid-2">
+            <!-- Keyword waste -->
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Keyword waste</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="pill-sample">1K sample</span>
+                <span class="mod-tools">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h11M4 12h7M4 17h13M17 4l3 3-3 3M20 14l-3 3 3 3" opacity=".85"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg>
+                </span>
+              </div>
+              <div class="tbl-head"><span>Keyword</span><span>Waste clicks</span></div>
+              <div id="keywordList"></div>
+            </div>
+
+            <!-- Search term waste -->
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Search term waste</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <button class="btn" style="margin-left:auto; padding:6px 11px; font-size:12px">Add negatives pack</button>
+                <span class="mod-tools">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h11M4 12h7M4 17h13M17 4l3 3-3 3M20 14l-3 3 3 3" opacity=".85"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg>
+                </span>
+              </div>
+              <div class="tbl-head"><span>Search term</span><span>Waste</span></div>
+              <div id="searchList"></div>
+            </div>
+          </div>
+
+          <!-- Row 2: attack, geo, device -->
+          <div class="grid-3">
+            <!-- Attack timing -->
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Attack timing</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="pill-sample">1K sample</span>
+                <span class="mod-tools"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></span>
+              </div>
+              <div class="heat" id="heat"></div>
+            </div>
+
+            <!-- Geo waste -->
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Geo waste</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="pill-sample">1K sample</span>
+                <div class="toggle-group geo-toggle"><button class="on" data-geo="map">Map</button><button data-geo="rank">Ranking</button></div>
+                <span class="mod-tools"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></span>
+              </div>
+              <div class="geo-map" data-geo-view="map"><svg id="geoSvg" viewBox="0 0 640 320" preserveAspectRatio="xMidYMid meet" width="100%" height="100%"></svg></div>
+              <div class="geo-rank" data-geo-view="rank" id="geoRank" style="display:none"></div>
+            </div>
+
+            <!-- Device waste -->
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Device waste</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="pill-sample">1K sample</span>
+                <span class="mod-tools"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></span>
+              </div>
+              <div class="donut-wrap">
+                <div class="donut-fig">
+                  <svg id="donut" viewBox="0 0 120 120" width="200" height="200"></svg>
+                  <div class="donut-center"><span class="val">72</span><span class="cap">invalid clicks</span></div>
+                </div>
+                <div class="donut-legend">
+                  <div class="li"><span class="d" style="background:var(--orange)"></span><span class="txt">Computer <span class="sub">50% &middot; 36 clicks</span></span></div>
+                  <div class="li"><span class="d" style="background:var(--red)"></span><span class="txt">Mobile <span class="sub">36% &middot; 26 clicks</span></span></div>
+                  <div class="li"><span class="d" style="background:#6b7280"></span><span class="txt">Tablet <span class="sub">14% &middot; 10 clicks</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: annotations, invalid reasons -->
+          <div class="grid-2">
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Change history annotations</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="mod-tools"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+                <span style="font-size:12px; font-weight:400">Annotate charts with account changes</span>
+                <span class="switch"></span>
+              </div>
+              <div class="chart-wrap"><svg class="chart" id="annChart" viewBox="0 0 480 220" preserveAspectRatio="none"></svg><div class="chart-lbls" id="annLbls"></div></div>
+              <div class="chart-xaxis" id="annXaxis"></div>
+              <div class="mod-caption">Every time series in Lunio can carry these annotations.</div>
+            </div>
+
+            <div class="mod">
+              <div class="mod-head">
+                <span class="mod-title">Invalid click reasons</span>
+                <span class="mod-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+                <span class="pill-sample">1K sample</span>
+                <span class="mod-tools"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></span>
+              </div>
+              <div class="tbl-head"><span>Reason</span><span>Clicks</span></div>
+              <div id="reasonList"></div>
+              <div class="mod-caption">Every classification is explainable - drill any click in Analyze.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right rail -->
+        <div class="mod-rail">
+          <div class="mod">
+            <div class="mod-title">Recent receipts</div>
+            <div class="rail-desc">Executed actions from the value ledger that mention this campaign.</div>
+            <div class="receipt">
+              <div class="r-title">Paused campaign Debt Consolidation - Broad</div>
+              <div class="r-sub">Jul 10, 2026 · measuring</div>
+            </div>
+          </div>
+          <div class="mod">
+            <div class="mod-title">Change history</div>
+            <div class="empty">No recorded changes for this campaign.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ ASK LUNIO — AI ASSISTANT PANEL ============ -->
+<div class="ai-overlay" id="aiOverlay"></div>
+<aside class="ai-panel" id="aiPanel" aria-hidden="true">
+  <div class="ai-head">
+    <div class="ai-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg> Ask Lunio</div>
+    <button class="ai-close" id="aiClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="ai-ctx" id="aiCtx" hidden></div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-suggest" id="aiSuggest"></div>
+  <div class="ai-input">
+    <textarea id="aiText" rows="1" placeholder="Ask about this campaign…"></textarea>
+    <button class="ai-send" id="aiSend" aria-label="Send">&uarr;</button>
+  </div>
+</aside>
+
+<!-- ============ MAXIMIZE MODAL ============ -->
+<div class="max-overlay" id="maxOverlay">
+  <div class="max-box">
+    <button class="max-close" id="maxClose" aria-label="Close">&times;</button>
+    <div class="max-body" id="maxBody"></div>
+  </div>
+</div>
+
+<script>
+/* Simplified world contours (public-domain GeoJSON, equirectangular 640x320) */
+var WORLD_RANKED={"AUS":"M578.5 277.6 580.2 278.4 582.6 277.6 583.8 280.4 583.0 282.9 581.1 283.9 578.5 281.8 577.3 278.4ZM575.2 218.0 575.9 219.7 578.4 220.7 578.6 223.5 579.8 226.8 580.2 229.4 582.2 230.6 584.6 232.6 585.4 234.5 586.1 236.9 588.0 237.0 588.3 239.4 589.5 240.7 591.7 243.3 592.2 245.1 592.2 247.7 593.0 249.6 592.9 251.6 592.1 254.6 591.8 257.4 591.0 259.4 589.1 262.2 587.9 265.2 586.8 268.0 586.7 270.2 583.7 271.0 582.0 271.9 580.1 273.7 577.6 272.4 575.3 273.2 572.8 272.3 570.0 271.5 568.5 268.5 567.3 266.4 565.7 263.5 563.3 265.4 564.5 262.9 565.0 260.2 563.5 262.1 561.8 264.6 560.4 262.5 559.3 260.9 556.4 258.2 553.5 257.1 550.3 257.3 548.0 258.1 546.0 258.8 542.4 259.8 540.5 261.5 538.3 262.4 535.6 262.2 533.1 262.6 531.6 263.6 529.8 265.0 527.3 264.9 525.4 263.5 524.5 261.8 525.7 260.2 525.7 257.4 524.7 255.1 524.5 252.6 523.8 250.5 522.8 247.9 521.7 246.2 521.7 244.1 523.1 245.6 522.2 242.8 521.8 240.1 522.2 237.2 523.8 235.8 526.1 234.1 528.3 233.1 530.2 232.5 532.0 231.6 534.9 231.0 536.3 228.9 537.4 226.9 538.7 223.8 539.4 225.7 540.1 223.1 542.1 220.9 543.4 219.6 545.0 218.4 547.2 219.1 549.3 220.4 550.9 217.6 552.2 215.3 554.2 214.7 555.7 213.2 557.4 213.6 559.4 213.9 561.6 214.0 563.5 214.8 562.3 216.9 561.4 219.0 562.3 221.9 564.6 223.4 565.9 224.7 567.6 225.9 569.3 226.7 570.8 224.7 571.4 222.5 571.9 220.8 571.6 217.8 572.2 215.7 572.3 213.8 572.7 212.0 574.0 213.6 575.2 215.9 575.2 218.0Z","BRA":"M217.6 254.3 219.9 251.3 221.9 249.1 224.6 247.0 223.8 244.0 223.5 241.8 222.2 240.6 221.1 237.6 219.6 236.3 217.0 236.3 217.1 233.3 217.0 230.4 217.8 227.7 216.4 225.7 216.5 223.6 213.1 223.5 212.4 220.9 212.4 218.0 210.3 217.4 208.4 216.3 205.7 215.1 203.7 213.1 203.7 210.8 201.5 209.5 199.0 211.2 196.4 211.8 194.6 211.9 194.7 208.5 193.2 209.8 191.0 208.6 189.2 206.2 188.5 204.2 190.0 202.2 190.3 200.3 192.4 197.7 194.1 197.0 196.5 191.0 196.3 188.8 195.5 186.4 195.9 183.8 199.3 183.9 200.8 185.1 203.5 185.8 205.1 184.7 207.3 182.7 205.5 180.7 204.8 178.6 207.8 179.3 209.6 178.4 211.6 177.6 213.0 176.0 213.7 177.8 213.7 179.6 213.4 181.5 214.0 183.6 215.9 184.8 217.5 183.9 219.5 183.4 221.2 182.2 223.1 182.5 225.0 183.1 226.6 182.1 228.2 178.4 230.2 183.4 231.2 185.3 229.9 187.1 233.6 188.1 233.6 190.3 235.0 188.9 237.2 189.7 240.2 191.0 240.7 193.5 242.8 192.8 246.3 194.0 248.9 193.9 251.6 195.8 253.8 198.2 256.7 199.0 258.0 202.5 257.5 207.4 254.1 212.0 253.0 214.4 251.7 216.4 250.7 218.0 250.9 222.2 250.4 225.6 249.6 227.9 249.3 230.8 247.5 233.7 247.2 236.0 245.4 238.3 243.4 238.3 240.6 239.1 237.4 240.7 235.3 242.5 233.8 244.7 233.8 247.6 233.5 249.8 231.8 252.1 229.9 256.0 228.3 257.7 226.3 260.8 224.4 258.3 223.0 257.1 221.2 255.7 218.7 254.0Z","CAN":"M206.8 84.9 209.8 85.1 208.2 86.1 206.0 85.2ZM210.1 79.2 207.0 78.6 205.3 77.5 208.3 77.9 210.1 78.8ZM100.4 80.5 96.6 79.8 94.5 78.3 92.3 77.3 93.7 76.0 96.4 76.6 97.9 78.4 99.7 79.3ZM220.2 75.7 219.0 77.7 221.4 77.4 223.2 78.2 224.9 78.9 225.9 81.3 225.7 84.6 223.7 84.3 224.1 82.5 221.5 84.1 220.0 82.5 218.1 82.6 214.6 82.5 214.7 80.5 216.2 79.2 218.0 75.7 220.7 73.6 220.2 75.7ZM84.1 68.3 85.2 70.7 86.8 72.4 85.0 71.4 83.5 69.7ZM168.6 42.7 170.9 43.9 172.8 44.7 174.9 45.3 177.6 46.9 173.2 47.1 170.5 47.3 168.0 48.4 164.9 47.4 166.5 46.3 167.3 42.5ZM185.1 39.4 183.1 39.5 183.4 37.2 186.5 37.5 185.1 39.4ZM150.0 35.1 146.5 35.2 142.6 34.4 145.4 32.8 147.3 33.4 150.0 35.1ZM159.0 34.2 159.0 36.5 161.4 34.7 163.5 36.2 164.7 39.3 166.6 37.7 167.9 35.8 168.0 33.4 170.5 33.5 173.1 33.9 175.5 35.0 174.3 37.2 175.3 39.5 171.8 41.0 169.4 41.4 167.5 40.7 165.3 43.7 162.7 46.1 160.2 46.3 158.6 48.6 156.6 48.9 154.4 50.7 152.5 53.2 151.8 54.9 151.7 57.5 154.3 57.9 155.1 59.9 155.9 61.6 158.4 61.2 161.7 62.1 163.5 63.0 167.0 64.6 168.9 65.5 171.8 65.7 173.7 65.9 173.4 67.8 174.0 70.0 175.3 72.5 177.9 74.6 180.3 71.6 179.3 68.1 180.9 65.9 182.9 64.4 183.9 62.8 182.6 59.5 180.4 57.8 182.5 55.5 181.7 53.5 181.1 50.1 185.4 50.1 187.3 50.4 190.4 50.5 192.6 51.8 196.3 52.8 196.2 54.7 196.8 57.5 199.7 59.1 202.3 57.9 204.0 55.5 206.6 56.4 208.9 59.2 210.9 61.9 212.5 64.5 214.1 65.8 216.9 66.3 218.8 68.9 220.9 70.0 221.0 72.5 218.4 74.1 215.5 74.9 213.3 76.7 210.3 77.1 206.5 76.6 203.8 76.6 202.0 76.7 200.5 78.3 198.2 79.3 195.6 82.2 193.6 84.3 198.0 81.0 201.7 79.2 204.3 78.9 205.9 80.0 204.2 81.5 204.8 83.9 207.7 86.6 210.6 86.3 212.4 83.8 213.7 86.2 211.5 87.7 207.5 89.0 205.8 89.9 203.8 91.5 202.4 89.5 205.5 87.6 202.6 87.7 200.6 88.0 199.5 83.7 197.5 83.5 195.6 84.5 195.0 86.3 193.6 87.6 189.6 88.3 186.9 88.3 184.2 90.3 181.8 91.3 179.3 91.7 177.3 94.1 175.5 94.4 173.4 95.6 172.6 93.9 174.0 91.4 173.6 89.5 173.2 87.5 171.4 86.5 170.4 84.9 167.7 83.4 164.6 81.8 162.9 81.0 160.7 81.6 158.5 81.1 155.4 80.7 153.5 80.3 151.8 79.8 147.1 79.4 141.1 79.4 135.0 79.4 129.7 79.4 124.4 79.4 119.1 79.4 113.7 79.4 106.7 79.4 101.6 79.4 97.9 77.3 93.4 75.4 92.5 73.5 90.4 71.2 90.1 69.4 88.0 67.8 88.9 65.6 85.9 62.8 84.0 60.3 82.9 58.7 81.3 57.7 79.2 55.6 77.4 56.4 75.6 57.6 74.1 56.1 71.1 54.6 69.3 41.9 69.4 33.7 72.7 34.3 75.5 35.3 77.3 35.5 78.9 34.6 81.0 33.9 83.7 34.2 86.3 33.2 89.3 32.7 91.8 33.1 93.4 32.3 96.4 34.2 98.8 32.8 101.2 34.1 104.0 33.5 106.8 34.5 110.9 35.3 113.4 35.7 117.5 36.6 115.0 37.7 118.2 38.2 123.0 37.9 126.4 38.9 128.4 37.8 126.6 36.8 129.9 36.0 132.7 36.3 134.5 37.5 136.5 37.3 139.6 38.3 142.4 37.9 145.0 38.0 146.4 36.2 149.1 37.0 149.1 39.1 150.2 37.3 152.5 35.2 150.6 33.8 148.5 32.9 148.6 30.5 150.7 28.9 153.1 29.2 154.9 30.2 157.3 32.7 155.7 33.8 159.0 34.2ZM117.0 26.2 120.1 26.6 122.6 27.7 124.6 26.6 127.7 29.5 127.3 26.3 130.6 26.3 132.6 27.2 133.7 29.4 137.3 32.0 140.5 33.0 137.4 34.2 134.7 35.5 131.6 34.9 129.6 35.0 126.2 35.8 121.7 36.1 118.6 36.3 115.2 34.7 111.4 33.2 115.3 32.6 117.8 32.7 120.1 32.3 116.7 31.8 112.9 32.0 110.4 31.9 113.6 30.2 110.8 30.2 107.7 29.7 109.2 28.0 115.2 25.8 117.0 26.2ZM134.2 25.6 132.7 27.0 129.9 25.5 132.9 25.1ZM184.3 26.3 182.6 26.8 180.6 26.8 178.7 27.1 176.2 25.7 181.2 25.0 184.3 26.3ZM166.1 26.1 167.5 27.5 169.2 25.7 173.7 24.8 176.7 27.1 180.0 27.9 181.6 27.0 185.6 28.2 188.0 29.2 191.6 29.7 193.4 31.1 197.7 31.9 200.9 34.9 197.7 35.9 201.9 37.4 204.7 37.9 207.2 39.9 210.0 40.0 206.4 44.1 204.2 43.2 201.4 41.1 199.1 41.4 200.7 43.9 203.1 44.9 205.0 47.7 202.2 48.7 197.7 46.9 200.2 48.8 202.1 50.1 197.6 50.0 193.7 48.7 191.6 47.7 189.5 45.9 187.0 44.8 181.8 45.8 181.5 43.5 184.9 43.4 188.5 43.1 188.5 41.2 190.8 39.1 189.7 37.4 186.9 36.3 183.3 35.5 182.6 33.6 179.6 32.7 175.5 33.7 169.0 33.2 165.2 32.5 162.3 32.2 162.7 30.4 160.2 30.4 159.6 28.2 161.0 26.2 162.8 25.3 167.4 24.7 166.1 26.1ZM141.6 24.6 143.7 25.1 146.9 24.8 145.7 26.5 148.4 27.5 148.1 29.4 145.1 30.3 142.2 29.3 137.8 27.6 141.4 27.1 139.5 25.7 141.6 24.6ZM154.3 27.0 152.4 28.6 150.4 28.6 149.3 26.6 150.2 24.6 152.0 24.0 155.7 24.1 159.1 24.6 156.4 26.6 154.3 27.0ZM105.8 30.0 101.2 31.1 96.1 29.0 98.1 26.4 99.7 25.0 97.9 23.6 103.9 23.3 106.5 23.7 111.0 23.9 112.7 24.5 114.6 25.4 112.4 26.0 108.1 27.5 105.8 29.1ZM153.6 22.1 150.0 22.8 147.9 22.2 151.4 20.6 153.6 22.1ZM144.9 18.3 146.3 20.4 145.5 22.1 142.6 22.3 140.7 21.9 137.8 20.8 139.6 19.2 142.3 18.4 144.8 18.6ZM127.6 19.4 129.9 19.8 131.8 19.9 131.0 22.1 125.0 22.4 120.5 23.4 117.8 23.4 121.3 21.7 113.2 22.0 110.7 21.6 113.2 19.4 119.8 19.6 123.0 20.9 126.1 21.0 123.6 18.9 125.2 18.1 127.0 18.4ZM151.7 17.4 153.6 18.1 157.1 18.1 158.3 19.7 160.3 20.2 163.8 20.8 166.4 21.0 169.3 20.5 172.9 20.3 175.8 20.5 177.7 21.3 174.3 23.3 172.0 23.0 166.9 23.4 163.3 23.4 160.4 23.1 155.7 22.4 154.9 20.1 153.1 19.2 149.4 18.9 147.3 18.2 151.7 17.4ZM113.4 16.2 111.8 18.7 106.8 19.7 104.0 20.1 101.6 19.6 104.6 18.0 108.3 16.5 111.0 16.6 113.4 16.2ZM153.2 16.5 149.0 16.4 152.1 15.8ZM124.1 16.1 120.8 16.8 118.2 16.0 122.2 15.1 124.7 15.5ZM125.0 14.1 122.9 14.6 119.9 14.5 121.8 13.6 125.0 14.1ZM149.6 15.3 147.0 15.8 144.8 14.4 147.0 13.6 150.1 14.5ZM142.1 14.7 139.9 15.4 137.0 14.7 133.0 14.6 134.7 14.0 132.6 13.4 135.9 12.9 140.8 13.7ZM165.3 11.8 167.4 12.5 165.0 13.2 161.7 14.8 158.6 15.0 154.9 14.7 153.0 13.8 154.4 12.4 151.2 12.4 149.2 11.7 149.3 9.7 152.4 8.9 155.7 8.3 158.0 9.4 161.0 9.9 163.9 10.3 165.3 11.8ZM198.2 4.2 203.0 4.4 206.8 4.6 210.0 5.2 205.6 6.8 201.3 7.2 203.6 7.7 199.4 9.0 196.5 9.7 193.5 11.5 189.8 11.8 183.3 12.5 185.7 12.8 184.3 15.0 181.5 15.7 178.2 17.2 181.5 17.6 176.8 19.5 172.1 18.9 166.9 19.2 164.3 18.9 160.9 18.8 164.0 17.3 163.1 15.7 168.9 16.5 166.5 15.1 163.6 14.6 168.2 13.2 166.2 11.6 170.3 10.6 174.5 10.0 170.5 9.8 164.3 9.9 161.1 9.1 157.6 7.6 159.8 6.4 161.9 6.4 165.4 6.0 168.0 5.2 170.2 5.3 172.1 5.9 173.5 4.7 175.8 4.4 179.0 4.1 184.4 4.0 190.5 3.9 194.4 4.0 198.2 4.2Z","DEU":"M337.6 66.2 337.7 67.1 339.5 67.6 339.4 68.4 341.3 68.0 342.3 67.4 344.3 68.2 345.1 69.0 345.5 70.1 345.0 70.7 345.7 71.4 346.1 72.6 346.0 73.4 346.7 74.8 345.9 75.0 345.0 75.2 343.7 75.6 343.1 76.2 341.8 76.7 342.1 77.3 342.3 78.2 343.2 78.8 344.2 79.7 343.5 80.7 343.2 82.5 342.4 82.4 341.6 82.3 340.3 82.7 338.7 82.6 337.6 82.6 335.2 82.0 333.3 82.5 333.5 80.9 334.4 79.4 331.8 79.0 331.0 78.4 331.1 77.5 330.9 75.5 330.6 73.2 331.7 73.2 332.2 72.3 332.6 70.3 332.3 69.6 334.1 69.0 335.6 68.4 335.2 67.5 335.2 66.3 336.5 66.6 337.6 66.2Z","FRA":"M337.0 94.6 336.4 96.3 335.6 95.8 335.2 94.3 335.5 93.5 336.7 92.7 337.0 94.6ZM326.4 76.4 327.6 77.4 328.5 77.3 330.1 78.3 331.0 78.4 331.8 79.0 334.4 79.4 333.5 80.9 333.3 82.5 332.0 82.7 330.7 84.5 330.7 85.5 331.6 85.1 332.2 86.1 332.6 87.5 332.0 88.2 332.5 89.9 333.4 90.2 333.2 91.2 331.6 92.4 328.1 91.8 325.5 92.5 325.3 93.9 323.2 94.1 321.2 93.1 320.6 93.6 317.3 92.6 316.6 91.8 317.5 90.4 317.9 86.0 316.0 83.7 314.7 82.6 312.0 81.8 311.8 80.1 314.1 79.7 317.1 80.2 316.6 77.7 318.2 78.7 322.4 77.0 322.9 75.2 324.5 74.7 324.7 75.5 325.6 75.5 326.4 76.4Z","GBR":"M309.9 67.2 309.0 68.7 307.6 68.3 306.5 68.3 306.9 67.1 306.5 65.9 308.0 65.8 309.9 67.2ZM314.7 58.2 312.8 60.6 314.6 60.3 316.5 60.3 316.1 62.1 314.5 64.1 316.3 64.2 318.0 67.0 319.2 67.4 320.3 69.9 320.8 70.8 323.0 71.2 322.8 72.6 321.9 73.3 322.6 74.4 321.0 75.6 318.6 75.5 315.6 76.1 314.7 75.7 313.6 76.7 311.9 76.5 310.7 77.3 309.7 76.9 312.3 74.6 313.9 74.1 311.1 73.7 310.6 72.8 312.5 72.2 311.5 71.0 311.9 69.5 314.5 69.7 314.8 68.4 313.6 67.1 311.4 66.7 311.0 66.1 311.6 65.1 311.0 64.5 310.1 65.5 310.0 63.4 309.1 62.3 309.7 60.0 311.1 58.2 312.5 58.4 314.7 58.2Z","IND":"M458.4 109.3 460.3 111.8 460.1 113.6 460.8 115.9 460.0 118.0 461.7 119.4 464.2 121.0 462.4 124.0 464.1 124.9 465.8 126.0 468.1 127.2 470.5 127.5 472.9 128.8 475.1 129.3 476.8 128.4 476.7 126.1 477.9 127.8 479.5 128.6 482.2 128.4 483.7 127.0 486.1 124.4 488.1 123.0 490.9 122.6 491.1 124.9 493.0 125.2 492.7 127.8 489.1 128.9 488.2 132.1 487.3 135.0 485.8 136.7 484.8 138.9 483.8 135.4 484.2 132.5 481.6 132.1 479.7 130.3 477.4 129.2 478.1 131.9 476.6 133.5 477.4 135.4 478.3 138.9 474.6 140.1 473.8 143.1 471.2 144.6 469.2 147.2 467.9 148.6 466.1 150.0 463.6 152.4 462.3 154.2 462.6 157.1 462.7 158.9 462.0 161.0 462.0 164.7 460.2 166.5 458.6 169.4 456.2 167.9 455.3 164.9 454.7 162.6 453.1 159.5 452.7 156.7 450.7 152.3 450.0 148.0 449.5 145.2 449.5 142.5 449.1 140.5 446.5 141.8 443.0 138.8 441.2 135.3 442.4 133.8 446.3 133.8 445.9 131.9 444.7 129.1 445.5 125.8 447.6 126.0 449.5 123.7 450.6 121.4 452.3 119.2 453.8 116.4 452.4 115.3 451.1 111.9 454.7 111.4 456.7 111.1 458.4 109.3Z","NLD":"M330.8 69.5 332.3 69.6 332.6 70.3 332.2 72.3 331.7 73.2 330.6 73.2 330.9 75.5 330.0 75.0 328.8 74.0 327.2 74.4 325.9 74.3 326.8 73.7 328.4 70.4 330.8 69.5Z","USA":"M151.4 78.6 152.3 80.2 155.4 80.7 157.1 81.3 160.7 81.6 162.9 81.0 164.6 81.8 166.3 82.6 169.1 84.1 170.5 85.5 173.2 87.5 173.6 89.5 174.0 91.4 172.6 93.9 173.4 95.6 175.5 94.4 177.3 94.1 179.7 93.0 181.8 91.3 184.0 90.4 186.1 88.7 189.6 88.3 192.9 88.3 194.4 87.3 195.6 84.5 196.9 82.9 199.5 83.7 199.5 86.7 201.0 88.7 199.1 89.8 197.2 90.5 195.3 91.2 194.1 93.0 194.7 95.3 192.2 96.4 190.4 96.6 188.5 97.9 188.1 100.0 186.8 101.7 186.0 103.7 185.0 105.5 184.5 103.0 184.3 101.2 184.3 103.5 184.4 106.0 185.4 109.1 184.2 110.8 182.4 111.4 180.3 112.9 179.2 114.4 177.2 115.8 175.4 118.2 175.4 121.3 176.0 123.2 176.8 125.7 177.7 128.3 177.5 130.6 176.6 132.2 174.7 130.5 173.8 128.6 173.0 126.9 173.1 124.6 171.2 121.5 168.7 122.2 166.4 120.5 164.4 120.8 161.5 120.7 161.0 122.5 158.4 123.3 155.6 122.4 153.2 122.0 150.0 124.2 148.3 125.1 146.9 127.2 147.0 129.7 144.0 129.4 143.1 126.8 141.4 124.3 139.3 121.9 136.7 123.7 134.3 122.3 133.3 120.0 131.3 118.3 127.6 117.5 122.6 118.4 118.6 116.9 115.9 115.8 113.8 115.6 111.8 115.8 110.3 113.4 108.3 112.4 106.0 111.6 103.6 107.8 102.1 104.7 100.0 101.6 99.8 99.8 99.2 96.8 99.2 94.9 99.3 91.1 99.5 89.1 99.7 87.1 99.4 84.2 98.9 82.3 101.1 81.6 102.1 83.7 102.2 81.3 101.6 79.4 106.7 79.4 111.9 79.4 119.1 79.4 124.4 79.4 129.7 79.4 135.0 79.4 141.1 79.4 147.1 79.4 150.8 79.4ZM48.0 61.5 46.2 62.4 45.0 60.8 47.6 59.7 49.5 60.5 48.0 61.5ZM25.6 55.4 23.4 55.3 25.5 54.5ZM14.7 46.8 16.9 47.0 20.1 47.9 17.3 48.1 15.0 47.9ZM44.3 30.6 46.4 31.1 49.4 31.3 52.0 32.2 53.8 31.9 57.6 32.6 61.0 32.8 64.7 32.8 67.4 33.4 69.4 33.7 69.3 41.9 69.3 54.5 72.8 55.2 75.6 57.6 77.4 56.4 79.2 55.6 81.3 57.7 82.9 58.7 84.0 60.3 85.9 62.8 88.9 64.2 87.9 66.6 85.4 65.1 84.9 63.2 82.6 61.4 81.6 59.3 77.1 59.1 75.0 58.5 71.3 56.2 66.5 55.0 64.1 55.2 60.6 54.2 58.5 53.2 56.5 53.7 53.8 55.8 50.3 57.0 50.8 53.6 52.7 52.9 50.0 53.6 48.7 55.0 46.2 56.6 45.8 59.3 43.9 60.2 42.1 60.9 38.9 63.0 36.3 65.0 33.4 65.4 31.6 66.2 27.0 67.5 28.7 66.1 30.5 65.4 32.3 64.2 34.6 64.0 37.9 61.8 39.6 60.5 40.8 57.6 38.8 58.2 36.1 57.5 33.1 58.1 31.9 56.8 28.8 55.6 27.3 54.6 26.0 52.8 25.4 50.6 26.8 49.4 28.9 48.1 31.5 47.4 34.2 46.9 32.9 45.5 30.7 45.6 26.7 45.4 24.1 44.8 21.1 42.7 23.6 41.7 27.6 40.7 32.6 41.7 31.1 40.3 28.9 39.5 26.0 37.4 23.5 36.7 27.7 35.5 29.9 34.5 32.2 32.4 37.3 31.1 41.6 30.1 44.3 30.6Z"};
+var WORLD_OTHER=["M428.8 108.9 430.6 109.7 432.3 108.5 434.7 107.4 435.1 105.7 436.9 104.5 439.2 105.1 441.1 105.9 443.0 105.6 444.7 104.6 445.9 102.7 447.2 103.9 447.0 105.8 449.1 105.8 451.5 105.0 453.3 105.0 451.7 106.3 449.6 106.5 447.7 107.0 447.1 108.9 446.4 110.9 444.3 112.5 443.9 114.5 443.2 117.2 440.5 117.9 438.0 119.7 437.9 121.6 435.6 122.5 433.0 122.6 431.2 122.9 428.2 121.8 429.8 119.8 428.3 118.0 427.6 114.8 428.1 111.7 428.8 108.9Z","M349.0 200.6 350.0 203.5 351.1 205.4 352.8 204.9 354.5 203.4 356.6 202.9 358.6 203.7 359.0 205.9 358.9 208.6 359.4 212.0 361.7 211.6 362.5 213.5 362.5 215.3 359.0 216.1 358.9 223.1 360.1 224.9 361.3 226.3 358.0 227.2 353.7 226.8 345.3 225.9 342.8 225.0 340.9 225.8 340.9 222.4 341.6 220.4 342.2 217.5 343.7 215.1 344.4 212.5 343.8 210.5 342.9 207.8 343.0 204.4 341.7 201.5 343.8 200.5 349.0 200.6Z","M356.6 95.2 357.4 97.5 355.8 100.1 354.5 98.8 354.5 96.2 355.1 93.4 356.6 95.2Z","M411.7 134.1 414.9 134.3 417.2 132.9 418.6 131.4 420.3 132.6 419.5 134.3 418.2 136.6 412.4 136.8 411.8 134.6Z","M203.6 309.4 201.0 308.7 198.0 308.7 198.0 303.7 199.6 306.4 201.9 307.8 204.4 308.3ZM204.5 236.3 205.6 237.9 206.2 236.1 208.3 236.2 211.8 240.3 215.5 242.3 217.3 243.1 215.8 247.4 217.6 248.0 219.6 248.4 222.6 246.3 222.9 244.4 224.7 245.2 223.1 248.2 219.9 251.3 217.6 254.3 217.1 256.0 216.6 258.3 216.7 260.5 216.1 262.4 218.3 265.5 219.1 267.9 217.3 271.9 214.7 273.0 211.1 273.5 209.2 273.3 209.2 276.2 208.5 278.1 206.6 278.4 204.9 277.6 204.5 280.4 206.7 280.4 205.5 282.2 204.1 283.6 203.9 285.8 201.8 287.0 199.9 289.8 201.6 291.4 202.7 293.8 200.6 295.1 199.4 297.6 197.8 298.5 197.7 301.8 192.2 302.4 191.4 299.4 189.6 298.8 189.5 296.4 191.4 294.1 192.1 291.1 192.8 288.1 193.4 286.4 193.0 284.2 191.7 280.8 192.1 277.7 192.6 275.4 193.0 273.5 193.6 270.5 193.6 268.5 194.9 267.0 194.9 265.2 195.9 263.0 195.9 261.0 194.6 256.8 195.7 254.5 195.5 252.4 196.2 250.4 197.3 248.3 198.6 247.0 198.4 241.7 200.3 240.6 200.9 238.3 202.2 235.8 204.5 236.3Z","M397.5 96.9 400.0 96.6 401.6 98.8 402.6 100.5 400.5 100.5 398.9 99.3 397.8 97.7Z","M350.2 81.4 348.8 84.2 346.9 84.6 344.5 84.9 342.0 84.4 339.8 84.0 337.7 84.0 340.3 82.7 342.4 82.4 343.5 80.7 345.5 80.4 347.1 79.4 349.3 79.9Z","M404.2 96.6 406.4 95.3 408.2 98.0 407.8 100.6 406.9 103.0 405.4 102.0 402.7 102.0 401.8 100.1 400.6 98.1 400.4 96.2 402.7 97.0Z","M372.2 197.5 372.0 194.9 373.2 192.8 374.7 194.3 373.5 196.6Z","M325.9 74.3 328.8 74.0 330.9 75.5 330.1 78.3 328.5 77.3 326.4 76.4 324.7 75.5Z","M324.8 173.8 322.9 172.5 323.0 167.4 321.9 165.1 321.6 163.3 323.4 161.9 325.1 160.6 326.4 161.9 326.8 163.9 325.7 166.7 324.8 168.8 324.8 173.8Z","M315.0 166.3 312.9 165.8 311.2 165.2 310.3 163.4 312.1 159.9 312.9 157.9 314.7 157.1 316.4 155.5 318.1 154.5 320.7 154.6 320.8 156.7 321.8 159.2 323.9 159.7 323.4 161.9 321.6 163.3 319.2 163.1 314.8 163.4 315.0 166.3Z","M484.8 138.9 484.2 142.0 483.6 139.7 482.5 137.3 480.5 139.4 478.3 138.9 478.0 137.1 477.7 134.1 478.1 131.9 477.4 129.2 479.7 130.3 481.6 132.1 484.2 132.5 483.4 134.3 482.1 135.7 484.8 138.9Z","M360.3 90.0 362.8 91.1 365.5 91.2 368.4 90.1 370.8 91.1 369.2 93.6 366.4 95.3 364.8 96.6 362.1 96.4 360.7 94.9 360.2 92.9 359.8 90.5Z","M353.8 88.6 354.8 90.4 353.3 92.2 351.4 92.6 350.1 91.2 348.9 89.7 348.4 87.8 350.2 87.8 353.0 88.1Z","M361.7 68.6 365.4 67.8 367.3 65.8 370.1 63.6 372.0 64.2 374.9 65.0 375.8 68.1 377.6 69.3 376.0 70.3 376.5 72.6 374.4 73.2 372.0 74.2 370.2 73.8 366.8 73.2 365.0 73.0 362.7 73.7 361.2 71.8 361.8 69.6Z","M161.5 148.3 162.7 146.8 163.0 148.6 162.9 151.1 161.4 152.5 161.5 150.0Z","M208.3 236.2 206.2 236.1 205.6 237.9 204.5 236.3 202.2 235.8 200.7 237.8 198.7 235.0 197.8 232.5 198.3 230.4 197.2 227.9 197.4 224.0 196.6 222.1 197.4 219.5 197.5 217.6 197.9 215.3 196.4 211.8 198.6 211.9 200.6 210.3 203.8 209.1 203.9 211.6 205.7 215.1 207.7 215.5 209.6 216.7 211.4 217.3 212.5 219.3 213.1 223.5 216.5 223.6 216.4 225.7 217.8 227.7 217.0 230.4 214.9 230.3 210.2 230.9 209.3 232.9 208.6 236.7Z","M483.0 126.3 483.6 128.4 480.7 128.3 477.9 127.8 479.1 125.7 481.3 125.6 483.0 126.3Z","M365.6 228.5 366.5 230.2 368.5 232.6 369.8 235.0 372.3 236.3 369.8 238.0 368.2 239.6 367.1 241.9 365.6 243.8 363.0 244.2 361.4 243.4 360.1 244.9 358.4 246.6 356.9 244.7 355.9 242.6 355.4 235.8 357.2 227.9 361.2 227.0 363.1 227.1 364.9 226.7 365.6 228.5Z","M347.2 171.2 349.0 170.5 351.9 170.2 353.6 168.5 355.7 167.7 357.3 166.7 358.6 164.3 360.6 163.0 361.9 165.3 361.6 167.1 363.7 169.4 364.7 171.0 366.6 173.1 368.4 175.3 365.6 176.0 363.4 176.3 361.4 177.4 359.8 178.7 357.2 178.0 354.6 176.5 353.0 178.3 351.7 179.7 349.4 180.5 348.5 182.6 347.4 180.2 346.6 178.3 345.9 176.5 345.8 173.8 347.2 171.2Z","M337.1 82.7 338.6 84.1 336.3 85.1 333.8 86.5 331.6 85.1 332.0 83.2 334.8 82.5 337.1 82.7Z","M198.0 303.7 198.0 308.7 199.9 308.7 198.8 310.3 196.9 310.1 193.8 309.1 191.5 307.9 189.7 306.7 187.3 304.2 191.2 306.1 193.6 306.9 195.1 304.4 196.7 303.5ZM198.7 235.0 199.4 238.1 200.3 240.6 198.4 241.7 198.4 245.4 197.3 248.3 196.2 250.4 195.5 252.4 195.7 254.5 194.6 256.8 195.4 260.6 195.9 263.0 194.9 265.2 194.9 267.0 193.6 268.5 193.6 270.5 194.1 272.7 192.6 275.4 192.1 277.7 192.5 280.4 192.2 283.4 193.2 285.6 192.8 288.1 192.1 291.1 191.2 292.9 190.8 295.5 189.6 298.8 191.4 299.4 192.2 302.4 196.4 302.7 194.1 304.3 193.8 306.4 191.0 305.7 189.0 304.2 186.8 302.9 186.7 300.2 185.6 295.0 186.3 292.9 188.2 291.2 185.5 290.5 187.2 288.6 187.8 284.9 189.8 285.7 190.7 281.1 189.0 283.3 188.4 279.8 189.0 275.7 189.3 272.1 189.2 269.6 191.0 266.0 192.2 262.4 193.0 259.1 192.6 255.8 193.1 254.0 192.9 251.3 193.9 248.6 194.3 244.3 194.8 239.7 195.4 234.8 195.3 231.2 194.9 228.1 196.3 226.4 197.4 229.5 197.8 232.5 198.7 235.0Z","M516.2 146.4 514.6 147.4 513.1 144.8 515.9 143.2 516.6 145.1ZM546.9 77.8 550.0 78.5 552.1 80.0 552.9 82.1 555.6 82.1 560.0 80.6 559.1 82.6 557.8 85.8 556.6 88.0 554.5 87.6 553.4 90.2 553.1 92.8 551.1 92.7 547.6 94.9 545.5 95.3 544.3 96.9 542.4 98.1 540.9 99.5 538.4 100.1 535.2 101.7 535.8 99.9 537.2 98.4 534.7 98.0 532.7 99.5 529.9 101.1 529.9 103.6 531.4 104.9 534.8 104.0 537.5 104.9 535.3 106.7 532.7 109.0 533.7 111.8 534.4 113.9 535.5 115.9 536.7 117.6 535.6 119.9 537.1 121.7 536.8 123.5 536.3 125.3 534.0 127.9 532.6 130.8 530.9 133.4 528.5 135.4 526.0 137.3 524.0 137.6 521.3 138.9 518.8 140.0 517.0 140.4 516.3 142.7 514.9 141.2 512.9 139.7 510.3 139.4 509.7 137.3 507.3 136.1 505.7 137.2 502.6 137.5 500.7 138.3 501.0 140.9 499.8 139.4 497.7 139.6 496.9 136.9 495.4 134.5 493.5 134.8 493.7 132.2 495.4 130.4 495.5 128.6 494.7 126.4 493.0 125.2 491.1 124.9 490.9 122.6 488.1 123.0 486.1 124.4 484.4 126.0 482.2 125.7 480.0 125.1 477.9 127.3 474.6 125.8 472.6 125.3 469.8 123.9 468.2 122.6 466.4 121.1 464.2 121.0 461.7 119.4 460.0 118.0 459.5 115.6 460.1 113.6 460.3 111.8 458.4 109.3 455.5 108.4 453.6 105.6 453.0 103.7 451.4 102.6 451.0 100.6 452.9 98.5 456.0 98.4 459.0 96.7 462.4 94.6 463.8 92.3 462.2 88.5 465.7 87.6 467.9 83.1 471.4 83.9 472.5 80.6 475.3 79.0 478.0 81.5 480.5 82.3 481.7 84.1 481.0 86.7 483.8 88.0 486.2 88.3 488.3 89.7 490.2 92.0 493.2 93.2 496.9 93.7 499.3 93.4 503.7 95.1 505.8 95.1 508.7 94.6 511.5 93.8 514.2 93.8 516.3 93.0 518.8 91.0 518.9 88.1 521.7 88.7 523.5 87.5 526.2 86.7 527.5 85.2 531.3 84.3 531.3 82.2 528.5 82.3 525.8 82.3 526.6 79.2 527.4 77.5 529.6 78.3 532.1 76.9 533.7 73.6 534.6 71.7 537.3 69.7 539.7 69.6 542.3 70.3 545.0 73.3 546.3 75.6 546.9 77.8Z","M314.9 176.6 312.9 176.2 309.6 176.6 306.6 178.0 306.4 176.1 305.8 174.1 305.1 172.3 305.4 169.7 305.6 166.9 305.7 165.1 307.8 165.2 309.7 165.0 311.5 165.9 313.8 165.7 315.4 169.4 314.7 171.3 314.2 173.8 315.0 175.7Z","M343.2 182.6 340.9 182.5 337.2 182.5 336.7 179.3 335.1 177.7 335.6 175.5 336.4 173.4 338.0 172.1 339.7 172.9 341.0 171.3 341.7 169.3 343.0 166.8 344.1 163.8 345.6 162.0 345.2 160.0 346.6 162.1 347.5 165.6 345.2 165.5 345.9 167.8 347.4 170.6 346.3 173.4 345.7 175.6 346.6 178.3 347.4 180.2 348.3 181.9 348.3 183.8 345.5 182.7 343.2 182.6Z","M374.8 179.8 374.7 182.4 373.5 185.2 373.0 188.0 372.6 190.5 372.0 192.5 372.0 194.9 372.2 197.5 372.5 199.5 372.7 202.0 374.6 206.0 371.6 206.1 370.6 207.8 370.7 211.4 370.4 213.6 372.2 214.9 372.8 216.8 370.7 215.6 368.7 214.4 365.8 213.6 364.1 212.4 361.7 211.6 359.8 211.8 359.5 209.4 358.8 207.2 358.7 205.1 356.5 203.7 354.5 203.4 353.8 205.2 351.1 205.4 350.0 203.5 349.0 200.6 343.8 200.5 341.9 201.0 342.2 199.2 344.2 197.5 345.9 198.6 348.0 196.1 348.4 193.6 349.2 191.4 351.2 189.2 351.7 186.9 351.8 183.7 352.7 181.2 353.0 178.3 354.6 176.5 357.2 178.0 359.8 178.7 361.4 177.4 363.4 176.3 365.6 176.0 368.1 176.3 369.7 177.9 371.8 177.9 374.8 179.8Z","M343.1 198.1 341.2 198.7 339.7 196.4 341.1 195.1 341.0 193.1 342.4 191.9 344.9 193.0 345.6 190.5 344.6 187.5 345.4 184.9 343.1 183.5 345.5 182.7 348.3 183.8 349.4 180.5 351.7 179.7 352.2 182.4 351.6 185.7 351.4 187.7 350.0 190.3 348.4 193.6 348.5 195.4 347.0 197.2 345.3 198.2 343.1 198.1Z","M186.0 187.9 184.4 186.7 182.4 186.7 179.8 184.5 180.2 182.6 182.2 180.2 182.6 177.3 182.2 175.3 182.3 172.8 181.8 170.6 182.3 168.8 184.7 167.0 185.8 164.2 188.0 163.1 190.9 161.7 192.4 160.1 192.0 162.0 190.9 163.7 190.2 166.1 190.8 168.6 191.1 170.7 194.4 171.9 196.6 174.1 198.6 174.0 200.0 175.3 199.4 177.6 200.3 179.8 199.4 181.4 201.1 184.8 199.9 183.1 195.9 183.8 196.9 185.4 195.5 188.0 196.6 190.1 195.7 197.1 194.3 195.8 195.5 193.6 193.0 192.8 190.1 192.7 189.0 190.4 187.7 188.8 186.0 187.9Z","M172.5 169.4 171.3 167.6 169.5 166.4 167.7 165.7 167.7 163.9 169.5 163.1 171.3 163.4 172.4 165.5 172.6 167.6 172.5 169.4Z","M173.7 136.4 176.7 136.6 178.3 137.3 180.7 137.9 182.9 139.8 184.5 140.8 186.8 141.9 187.9 143.3 185.5 143.7 181.8 143.8 182.2 142.0 180.5 141.2 179.0 140.0 176.9 139.0 174.5 138.6 172.8 137.5 170.8 138.7 168.9 139.3 170.3 137.8 172.0 136.9 173.7 136.4Z","M378.2 110.0 381.5 108.9 379.9 110.3Z","M350.2 80.3 347.1 79.4 345.5 80.4 343.2 78.8 342.1 77.3 343.7 75.6 345.4 74.8 347.5 75.5 349.7 76.8 352.7 77.3 352.2 79.4 350.4 79.9Z","M396.6 159.6 395.9 161.7 394.2 163.2 394.7 160.9 396.6 159.6Z","M339.4 63.0 337.2 65.2 335.2 66.3 334.4 62.8 336.8 61.4 338.8 60.2 338.2 62.0Z","M192.5 144.1 195.2 144.3 196.9 145.0 198.5 146.5 196.2 147.0 194.4 146.9 193.1 148.7 192.1 146.5 192.5 144.1Z","M341.3 135.8 335.2 140.0 330.1 144.3 327.6 145.3 325.6 145.5 324.8 143.8 323.2 142.1 317.2 137.3 311.2 132.5 304.6 127.1 304.6 123.9 307.5 122.3 309.2 122.0 311.4 120.3 313.4 119.4 314.5 117.6 317.7 116.4 316.9 112.7 316.1 110.0 317.9 108.8 319.8 108.4 322.6 106.8 325.6 106.4 328.6 106.2 331.1 105.7 333.0 105.7 335.0 106.0 334.9 109.3 334.5 111.1 333.5 114.0 335.0 115.3 336.1 116.7 336.9 120.7 337.4 122.6 337.2 125.5 337.1 127.7 336.6 130.0 337.6 131.6 338.3 133.8 340.6 134.4Z","M177.2 195.1 178.2 193.5 176.1 192.5 176.1 189.9 177.1 188.2 177.6 185.9 179.8 184.5 181.6 185.8 183.9 187.0 186.0 187.9 185.7 191.0 183.8 193.3 181.6 194.2 180.5 196.1 179.2 198.5 177.7 197.2 177.2 195.1Z","M382.1 122.5 381.2 125.0 378.9 124.9 377.6 121.7 378.2 124.2 379.3 126.5 380.6 129.9 381.9 132.3 383.5 134.8 383.2 136.6 385.2 138.6 378.5 139.0 371.6 139.0 364.4 139.0 364.4 130.9 364.4 123.1 363.9 121.3 364.1 119.0 367.1 117.9 368.8 118.5 370.6 119.1 372.8 118.8 375.1 117.9 376.8 119.3 378.7 119.1 380.9 118.7 382.1 122.5Z","M395.3 159.9 394.0 157.9 392.7 156.4 389.9 155.5 387.4 154.6 384.8 155.8 385.3 151.6 386.1 149.5 388.3 147.9 389.3 150.4 389.8 152.4 393.2 155.6 395.2 158.1 396.6 159.6Z","M303.9 95.2 303.3 92.6 305.8 91.0 308.0 91.4 310.4 91.4 312.3 91.8 316.6 91.8 320.6 93.6 323.2 94.1 325.3 93.9 323.7 96.6 321.4 97.1 320.2 99.0 319.5 100.8 319.2 103.1 317.4 105.0 316.2 106.7 313.9 106.7 311.1 107.4 308.9 107.3 306.7 105.7 307.5 103.6 307.4 101.5 307.5 98.9 307.8 96.9 307.1 95.1 305.3 94.3Z","M363.2 60.0 361.6 58.2 363.7 56.4 366.0 56.0 367.9 56.4 369.7 56.3 368.7 58.0 369.3 60.0 367.0 60.7 364.7 59.7Z","M387.4 154.6 389.5 155.1 392.7 156.4 394.0 157.9 395.3 159.9 394.1 161.9 395.7 163.1 396.3 165.5 397.7 167.3 403.5 169.9 399.9 176.5 397.6 176.6 396.0 178.2 393.2 178.9 390.9 179.1 389.1 179.9 385.5 177.8 383.7 177.0 382.8 175.4 381.7 173.0 379.7 170.6 380.4 168.4 380.4 166.4 380.9 164.1 381.9 162.6 382.7 160.9 384.5 157.7 384.8 155.8 386.8 156.2Z","M370.8 35.2 373.3 38.2 371.7 39.8 373.7 42.4 372.5 44.3 374.1 45.9 376.0 48.8 373.7 51.2 369.9 54.1 366.7 54.2 363.5 55.0 360.7 55.5 357.9 53.6 358.3 51.4 357.4 49.4 359.9 46.7 364.0 44.4 362.5 41.9 361.8 37.7 359.1 36.2 356.7 35.1 359.7 35.7 362.1 35.6 364.0 36.1 365.7 35.1 366.5 33.5 369.3 32.7 371.6 33.6Z","M211.2 302.0 213.3 300.7 215.9 300.4 216.8 302.1 214.4 302.8 212.1 303.0Z","M339.7 196.4 337.9 194.1 336.7 192.3 335.6 190.0 336.5 187.0 337.5 185.2 340.1 185.3 340.0 182.6 342.0 182.7 343.6 184.7 344.6 187.5 345.6 190.5 344.9 193.0 342.4 191.9 341.0 193.1 341.1 195.1 339.7 196.4Z","M393.9 95.9 393.7 93.5 391.7 92.4 395.4 92.2 397.8 93.3 400.8 93.8 402.5 95.2 401.7 96.8 397.5 96.9 395.8 95.8 393.9 95.9Z","M321.9 174.5 319.1 175.8 316.5 177.2 315.0 175.7 314.2 173.8 314.7 171.3 315.4 169.4 315.0 166.3 314.8 163.4 317.9 163.3 320.0 163.3 320.7 165.1 320.8 168.4 320.9 171.2 321.5 173.7Z","M305.0 170.6 302.7 168.7 301.1 167.8 300.2 165.4 298.4 165.8 296.5 167.9 295.0 165.8 293.9 164.1 293.9 162.1 295.4 160.8 297.8 160.4 299.6 160.9 301.9 161.4 303.4 160.4 305.1 162.4 305.2 164.4 305.6 166.9 306.1 168.7 305.3 170.6Z","M290.1 158.6 292.2 157.5 294.4 157.5 292.4 158.3 290.1 158.6Z","M293.1 163.2 291.4 162.2 290.4 160.3 292.4 159.7 295.6 159.8 295.3 161.8 293.1 163.2Z","M362.1 108.8 364.5 109.4 366.7 109.7 364.0 110.5 361.8 109.7ZM367.3 95.9 366.3 97.5 364.3 97.2 362.2 97.8 360.2 98.7 361.5 101.1 362.7 103.2 361.6 105.0 361.2 107.2 358.5 106.3 357.9 104.5 356.9 102.0 355.8 100.1 356.8 98.4 358.5 97.3 360.5 96.4 363.5 95.8 366.4 96.4Z","M236.9 5.2 242.8 3.9 249.1 4.0 251.3 3.2 257.6 3.0 271.8 3.3 282.9 5.0 279.7 5.9 272.9 6.0 263.3 6.2 270.5 6.3 275.8 7.1 279.3 6.4 278.8 8.5 283.3 7.7 292.0 6.8 297.3 7.2 291.0 9.8 284.4 10.6 288.5 10.7 286.4 12.4 285.0 13.8 285.0 16.2 287.2 17.7 284.4 17.8 281.5 18.5 284.7 19.6 285.2 21.5 283.3 21.7 285.6 23.6 281.6 23.8 283.7 24.7 280.6 25.8 278.1 25.8 280.3 27.3 276.8 27.4 278.3 28.5 280.7 29.9 281.3 31.6 278.2 32.1 274.6 29.9 273.1 32.6 277.8 32.7 280.3 32.8 275.5 34.7 270.7 36.5 265.5 37.2 263.5 37.3 261.7 38.1 259.2 40.4 255.4 42.0 251.8 42.6 249.2 43.1 247.7 44.5 246.8 47.5 243.9 49.3 244.6 51.0 243.8 52.8 242.9 55.0 240.4 55.1 237.8 53.3 234.2 53.3 232.5 52.1 231.3 49.9 228.2 47.2 227.1 43.7 224.6 41.7 224.1 39.3 225.8 36.7 228.5 35.9 229.6 33.3 227.5 34.0 225.0 34.7 222.8 34.0 223.4 31.3 228.6 31.8 225.6 30.4 222.2 30.0 222.7 27.4 220.2 25.0 218.1 22.7 215.8 21.9 211.1 19.6 207.3 19.5 202.6 19.6 198.2 19.7 196.2 19.0 193.1 17.6 197.7 16.9 201.3 16.8 193.7 16.3 189.7 15.4 196.7 13.4 203.2 12.4 199.1 10.8 206.8 8.4 209.4 8.1 212.8 6.5 218.3 6.2 223.8 6.2 225.7 6.9 230.4 5.7 234.7 6.5 237.2 6.7 240.8 7.4 236.6 6.2Z","M159.8 157.3 157.8 156.8 156.0 155.5 156.9 152.1 159.2 152.1 158.1 150.2 158.2 148.3 161.5 148.3 161.4 152.5 163.2 152.9 161.5 154.3 160.8 156.1Z","M226.6 182.1 225.0 183.1 223.1 182.5 223.7 180.5 223.3 178.3 224.1 174.9 226.0 175.6 227.9 177.5 227.1 180.4Z","M213.8 169.1 216.0 171.4 217.7 173.6 218.1 176.4 216.8 178.6 218.2 180.2 219.5 183.4 217.5 183.9 215.9 184.8 214.0 183.6 213.4 181.5 213.7 179.6 213.7 177.8 213.0 176.0 210.8 174.4 212.4 172.5 212.4 170.4 213.8 169.1Z","M164.8 158.9 164.0 157.2 162.1 156.4 161.5 154.3 163.2 152.9 165.5 152.8 167.7 152.4 169.7 152.6 171.7 153.9 170.3 155.0 168.6 155.9 166.6 157.2 165.3 158.8Z","M353.5 86.3 353.8 88.6 351.8 88.1 349.4 87.8 348.9 89.7 350.1 91.2 351.4 92.6 352.8 93.8 351.1 93.0 348.5 91.6 347.0 89.9 346.5 88.1 344.3 88.0 345.9 86.9 347.9 86.4 349.4 85.0 351.3 86.2 353.5 86.3Z","M189.9 143.6 192.5 144.1 192.5 146.1 190.5 147.5 188.6 147.8 190.8 146.9 190.6 144.6Z","M348.8 84.2 349.0 82.3 351.1 81.9 353.2 81.9 355.0 81.1 357.0 80.3 358.9 80.9 358.4 83.9 357.4 85.4 354.8 85.7 352.8 86.6 350.0 85.2Z","M529.6 205.5 531.8 206.8 529.7 207.2 527.5 207.5 529.1 206.2ZM538.5 205.4 535.6 207.3 533.2 207.0 534.6 205.8 536.9 206.3ZM513.1 202.5 516.5 202.8 520.2 202.9 523.5 204.7 525.7 206.1 523.7 206.9 521.7 206.0 518.3 205.9 514.5 204.7 512.5 204.7 509.3 203.8 507.3 202.7 508.5 200.6 510.7 200.7 512.9 201.8ZM551.9 194.4 552.6 196.1 549.6 195.0 547.4 195.1 550.0 193.8 551.9 194.4ZM558.5 190.1 559.0 193.7 560.8 195.0 562.3 192.7 564.3 191.3 567.4 192.1 570.7 193.3 570.7 200.5 570.7 207.7 569.1 205.9 567.3 205.5 564.6 206.1 565.4 204.4 566.1 201.3 565.2 199.5 561.8 197.6 557.6 195.4 554.6 193.8 556.6 193.0 554.4 191.2 552.0 189.7 554.4 189.1 558.2 189.3ZM542.6 184.5 541.2 186.6 538.2 186.6 535.2 186.7 533.4 188.7 535.0 190.7 539.3 188.9 537.6 190.9 537.7 194.6 539.0 197.9 538.0 200.0 538.2 197.4 536.4 198.3 534.9 195.5 535.1 193.4 534.0 196.6 534.1 199.8 532.2 199.5 532.7 197.4 532.4 195.3 531.1 193.8 532.1 190.6 533.0 187.2 534.9 184.7 538.5 185.7 540.6 185.6 542.3 184.0ZM548.8 185.1 548.7 187.0 548.2 189.3 546.5 185.4 547.4 182.8 548.6 184.2ZM529.6 183.6 531.5 185.6 529.4 185.9 528.9 189.4 527.2 190.9 527.2 193.1 526.5 196.4 524.2 196.6 522.2 195.2 519.2 195.3 517.4 194.3 515.7 191.1 513.9 188.6 513.7 186.7 513.9 184.6 515.0 183.2 516.5 185.9 518.8 185.6 520.6 184.3 523.8 184.4 524.7 181.4 526.0 178.1 528.0 178.1 528.6 180.4 529.9 182.5ZM508.1 200.5 506.2 200.5 504.7 198.7 502.4 196.9 500.3 193.8 499.4 192.1 498.0 189.0 496.5 187.2 495.9 185.3 495.3 183.6 493.7 182.2 492.8 180.3 491.4 179.0 489.6 176.6 493.3 176.0 494.9 178.2 496.3 179.7 498.9 183.0 500.7 183.0 502.2 184.5 503.2 186.3 503.9 189.2 505.5 190.0 506.5 192.8 508.6 194.3 508.2 197.1 508.1 200.5Z","M309.0 68.7 307.9 72.3 304.8 73.6 302.3 73.2 303.7 70.9 302.8 68.7 305.2 66.9 306.5 68.3 309.0 68.7Z","M415.9 105.5 418.7 103.8 420.7 103.5 423.9 104.8 427.3 107.0 428.8 108.9 428.1 111.7 428.4 113.6 428.2 116.6 429.7 118.3 428.2 121.8 429.8 124.2 431.5 125.2 431.6 127.2 430.0 129.7 429.3 132.2 426.0 131.6 424.0 131.1 422.0 130.8 421.3 128.1 419.1 128.1 417.3 129.1 415.1 128.4 413.3 126.7 411.6 126.1 410.4 124.0 409.1 121.1 407.0 120.7 405.3 119.2 404.2 115.9 402.0 114.7 400.7 112.6 402.0 110.1 400.7 108.2 399.6 105.6 398.6 103.8 398.4 100.6 400.8 101.8 402.7 102.0 404.8 100.4 406.5 103.1 407.5 104.6 410.4 106.2 412.9 106.6 415.7 106.0Z","M400.7 108.2 402.0 110.1 400.7 112.6 402.0 114.7 404.2 115.9 405.1 117.6 405.4 120.4 402.8 123.4 399.5 123.2 394.5 118.8 391.8 117.2 389.7 116.6 389.0 113.9 392.9 111.6 393.6 109.0 394.4 106.8 396.1 105.1 398.1 105.4 400.7 108.2Z","M294.2 40.9 295.8 43.9 293.5 45.5 288.4 47.1 284.5 47.1 279.5 46.4 281.3 45.5 277.4 44.4 280.6 44.0 276.8 42.8 278.0 41.4 280.6 41.0 283.4 42.5 286.1 41.3 288.4 41.9 291.3 40.8 294.2 40.9Z","M383.5 115.4 382.2 117.3 383.0 119.0 382.1 122.5 380.9 118.7 381.8 116.8 382.4 114.6Z","M347.6 103.2 347.0 105.0 346.8 106.8 344.6 105.7 342.1 104.6 344.4 103.6 346.2 103.4ZM336.4 96.6 337.4 98.2 337.2 101.1 335.0 101.1 334.9 98.5 336.4 96.6ZM342.0 84.4 344.5 84.9 344.8 87.0 341.9 87.4 342.4 90.3 344.0 91.4 344.9 93.2 346.9 95.0 348.7 95.5 351.1 97.4 352.7 98.5 350.0 98.3 350.5 100.6 348.6 103.8 348.6 101.6 347.4 99.2 345.0 97.6 342.9 96.5 339.9 94.1 338.1 90.7 335.8 89.7 334.0 91.0 332.5 89.9 332.6 87.5 334.8 85.7 337.6 85.4 339.6 84.4 341.6 83.6Z","M182.1 146.8 184.2 147.5 182.7 148.5 180.7 147.4Z","M383.2 116.1 385.5 116.3 389.0 113.9 389.7 116.6 385.8 118.1 387.6 120.3 385.3 121.7 384.1 123.2 382.1 122.8 383.0 119.0 383.2 116.1Z","M559.4 112.2 558.6 114.3 556.5 115.4 555.3 113.7 557.3 112.7 559.4 112.2ZM570.6 105.6 570.0 107.4 569.3 110.0 567.1 111.1 563.9 111.2 561.4 113.7 560.1 111.2 557.0 111.7 554.9 112.8 552.9 112.8 554.7 114.4 553.5 118.2 551.5 118.2 551.9 116.3 550.1 114.1 551.7 113.4 554.5 110.9 555.8 109.4 559.3 108.7 561.2 109.2 563.1 105.3 566.9 104.1 569.0 100.5 568.7 98.1 571.3 96.3 572.3 99.3 570.6 103.3 570.6 105.6ZM575.8 90.1 578.3 89.6 578.7 92.1 576.1 92.7 574.5 94.9 571.8 93.4 570.8 95.8 568.8 95.8 568.6 93.7 569.4 92.0 571.3 91.8 571.9 88.8 574.5 89.4Z","M446.2 94.3 442.8 96.3 441.4 97.8 438.6 96.7 438.2 94.9 437.5 92.7 435.4 91.1 432.3 91.3 430.2 91.6 428.5 89.6 424.3 87.2 419.4 88.3 419.5 96.4 417.3 94.8 414.1 94.6 411.3 92.4 410.5 90.4 411.2 87.7 414.3 87.7 414.6 85.6 412.5 84.3 408.9 84.7 406.4 84.8 405.4 82.2 402.6 80.8 403.6 79.1 404.5 76.2 406.4 77.5 410.3 73.5 413.0 73.4 416.9 75.0 419.1 75.9 420.9 74.9 423.8 74.9 426.0 76.0 429.0 75.5 426.6 72.9 428.3 71.8 429.7 70.7 428.4 69.2 435.9 67.6 441.2 66.3 442.8 65.4 446.0 65.8 446.5 68.1 448.4 67.6 450.7 68.3 452.2 69.4 456.7 67.3 458.3 69.7 462.3 75.3 465.7 75.4 468.2 74.9 470.1 76.6 472.1 77.9 474.4 77.6 474.0 80.4 472.4 82.9 467.9 83.1 466.6 87.1 462.2 88.5 463.8 92.3 462.7 94.1 460.7 93.0 458.1 92.8 455.1 92.7 451.9 92.0 450.6 93.8 447.7 93.0 446.2 94.3Z","M392.9 189.5 393.9 191.3 392.2 193.1 391.3 194.8 390.4 197.2 387.1 195.7 380.6 189.9 380.3 187.3 381.6 185.0 381.5 180.8 380.5 178.2 382.8 175.4 383.7 177.0 385.5 177.8 387.8 179.6 390.3 180.0 392.5 178.2 394.4 178.9 392.9 181.4 392.9 189.5Z","M446.2 94.3 447.7 93.0 450.6 93.8 451.9 92.0 454.5 93.0 458.1 92.8 460.7 93.0 462.7 94.1 459.6 95.8 456.7 97.0 454.2 98.1 451.2 99.5 447.6 100.9 445.4 100.2 443.5 100.4 445.6 99.5 447.6 99.0 449.9 97.4 447.8 96.2 445.2 96.0 446.7 94.5Z","M504.0 164.1 502.4 160.7 502.0 158.0 503.1 156.2 505.4 155.8 508.5 157.0 510.9 156.2 511.1 160.4 508.1 162.1 507.0 163.6 504.0 164.1Z","M548.2 102.4 549.7 105.0 550.2 108.9 547.9 110.6 544.9 111.7 545.0 108.8 544.2 106.5 544.3 104.3 545.9 103.2 547.9 102.9Z","M405.3 121.4 406.1 124.6 404.4 123.6 404.1 121.2Z","M507.1 156.1 507.7 153.2 506.3 151.3 506.2 149.1 504.8 147.3 503.1 147.9 499.7 148.9 499.6 147.0 500.1 144.6 498.8 143.2 499.9 140.3 500.7 138.3 502.7 139.8 503.5 141.8 505.7 141.8 506.4 143.7 504.7 145.1 506.8 146.4 508.3 149.0 509.4 150.9 510.8 152.5 510.9 156.2 508.5 157.0Z","M306.3 178.0 304.0 176.9 302.4 175.2 300.9 174.0 299.7 172.6 301.0 170.1 302.7 168.7 303.3 171.0 305.1 172.3 305.8 174.1 306.6 175.9 306.3 178.0Z","M346.4 137.1 344.1 136.7 341.3 135.8 339.1 133.4 337.6 131.6 336.6 130.0 337.1 127.7 337.2 125.5 337.5 123.7 336.9 120.7 337.7 118.3 339.5 116.8 340.4 114.5 342.5 115.2 344.7 115.4 347.1 116.4 347.9 118.3 352.0 119.7 353.9 120.8 355.7 119.2 355.8 116.4 358.3 115.1 360.7 115.6 362.5 116.9 364.7 117.9 364.4 119.9 364.4 123.1 364.4 130.9 364.4 139.0 364.4 143.4 362.4 143.4 355.3 140.1 348.2 135.9 346.4 137.1Z","M465.4 171.0 465.1 173.3 462.8 174.4 462.0 172.7 461.7 169.5 462.5 165.9 464.5 168.7 465.4 171.0Z","M371.5 251.5 371.3 253.9 369.3 255.2 368.0 253.5 369.9 251.3Z","M360.4 67.7 357.8 65.8 357.4 63.9 359.5 63.3 362.5 63.4 364.4 63.6 367.1 64.8 365.8 66.5 363.5 68.6 361.3 67.9Z","M357.4 63.9 358.4 60.9 360.0 60.1 361.5 61.8 363.2 60.0 365.5 59.9 368.5 60.7 369.5 62.3 368.2 64.5 365.4 63.8 362.5 63.4 359.5 63.3 357.4 63.9Z","M310.8 108.7 313.5 109.5 315.4 109.9 316.8 111.4 317.5 115.1 315.3 116.8 313.5 117.8 311.4 120.3 309.2 122.0 307.5 122.3 304.6 123.9 304.6 126.6 303.3 127.8 301.2 128.0 299.2 130.0 297.8 132.9 295.3 135.3 294.7 138.3 293.8 140.1 289.8 140.3 291.1 137.5 291.6 135.2 293.2 133.5 293.7 131.0 295.5 128.8 296.6 126.6 299.2 125.5 300.6 124.0 303.0 121.5 302.6 118.8 303.2 116.9 304.6 114.2 306.4 113.2 308.9 110.0 310.8 108.7Z","M367.3 81.2 370.2 81.3 371.6 82.7 373.2 84.6 371.3 85.1 370.6 87.0 370.1 85.2 369.0 83.0 367.9 81.4Z","M408.1 215.1 409.0 217.5 409.3 220.2 409.6 222.2 408.6 223.9 407.9 227.2 407.2 229.8 406.3 232.8 405.2 237.0 404.5 240.1 403.7 242.6 400.7 244.1 398.3 242.7 397.7 239.6 397.1 237.9 397.2 234.7 398.9 231.9 398.6 229.4 398.2 226.0 399.0 223.4 400.9 222.8 403.3 221.2 404.8 219.8 405.1 217.7 406.8 216.5 407.5 214.2Z","M147.3 130.5 146.6 132.4 146.2 137.0 146.3 139.3 147.2 142.0 148.4 143.7 149.5 146.0 151.4 146.6 153.7 146.9 156.4 146.3 158.6 145.0 159.2 141.9 160.7 140.7 162.6 140.2 165.2 140.0 164.7 142.9 164.3 145.6 162.7 146.8 161.5 148.3 158.2 148.3 158.1 150.2 159.2 152.1 156.9 152.1 156.0 153.9 154.0 153.1 151.7 151.8 149.2 152.8 147.1 152.5 144.1 151.0 140.7 149.7 139.3 148.6 136.0 147.2 133.3 145.0 132.0 142.5 132.9 140.3 132.1 138.4 129.9 135.1 128.2 133.4 125.8 131.1 125.7 129.2 123.7 127.6 122.3 125.9 120.5 123.7 119.4 121.3 118.8 119.6 117.6 117.9 115.7 118.3 116.1 121.0 118.1 123.5 119.5 126.3 121.6 128.7 122.2 130.8 123.2 132.8 124.9 135.0 124.7 137.2 122.8 134.6 120.6 133.0 120.4 130.2 118.3 128.5 116.5 127.7 117.0 125.5 115.7 123.0 114.0 121.0 112.5 117.8 111.8 115.8 113.8 115.6 116.1 115.4 118.6 116.9 122.6 118.4 126.2 118.4 130.7 117.5 132.2 119.0 133.9 121.1 135.2 123.0 137.8 121.9 140.5 122.7 142.0 125.6 143.5 128.4 145.4 130.1 147.3 130.5Z","M356.6 95.2 358.4 94.4 360.7 94.9 360.2 96.8 357.4 97.5 356.6 95.2Z","M298.4 155.3 299.3 153.6 301.1 154.2 303.0 153.4 310.2 153.4 310.2 151.6 309.4 142.0 308.5 132.5 311.2 132.5 317.2 137.3 323.2 142.1 324.8 143.8 325.6 145.5 327.6 145.3 327.6 150.4 326.5 153.2 322.5 153.8 320.7 154.6 318.1 154.5 316.4 155.5 314.7 157.1 312.9 157.9 312.1 159.9 310.7 161.7 310.4 164.7 308.5 164.6 306.4 165.2 305.3 163.8 304.4 161.5 302.4 161.0 300.4 160.6 299.5 158.6 298.4 156.7Z","M497.0 143.0 494.7 144.1 493.9 146.5 494.0 148.8 495.1 150.4 495.2 153.8 496.2 157.1 496.3 159.3 497.0 161.3 496.1 163.4 495.2 165.7 495.6 162.3 495.1 158.6 493.8 154.8 493.5 152.1 492.7 150.2 489.5 152.9 487.4 152.2 488.1 149.5 487.7 147.4 486.3 144.8 484.2 142.0 484.8 138.9 485.8 136.7 485.9 134.4 488.1 133.1 489.2 130.2 491.4 127.4 493.2 126.1 495.4 126.9 495.4 130.4 493.7 132.2 493.5 134.8 495.4 134.5 495.8 136.5 496.4 138.8 498.5 140.0 498.0 142.5Z","M355.2 93.8 352.8 93.8 353.8 91.7 356.2 92.9Z","M476.0 78.8 477.9 78.4 481.3 76.5 484.0 75.5 487.4 76.2 490.3 77.3 492.9 77.8 494.6 76.3 495.8 72.7 497.7 73.6 501.4 74.5 504.3 77.0 508.2 76.3 510.0 76.6 511.8 77.7 514.5 78.8 516.7 79.2 520.7 78.2 523.3 76.7 525.3 77.7 527.4 77.5 526.6 79.2 525.3 81.4 528.5 82.3 531.3 82.2 532.9 83.8 528.7 84.6 526.2 86.7 523.5 87.5 521.7 88.7 519.9 88.3 518.0 89.5 517.6 91.8 514.2 93.8 511.5 93.8 508.7 94.6 506.6 95.8 503.7 95.1 501.0 93.8 496.9 93.7 493.2 93.2 491.3 93.3 489.4 90.0 486.2 88.3 483.8 88.0 481.7 87.6 481.7 84.1 480.5 82.3 478.0 81.5 476.5 80.3Z","M381.4 213.0 384.9 213.5 387.2 212.5 390.3 211.6 391.7 210.4 391.9 213.5 392.1 215.5 392.2 218.9 392.0 221.6 390.1 224.5 388.5 225.3 386.5 226.4 384.5 228.8 382.6 230.7 381.7 232.8 382.5 234.5 382.9 236.4 383.2 238.5 383.0 240.8 380.8 242.4 378.7 243.5 378.1 245.3 376.4 243.8 376.8 241.4 375.5 236.7 377.3 234.2 378.1 232.4 378.0 230.4 378.4 227.3 378.4 224.5 376.6 223.6 373.9 222.6 373.7 220.2 379.0 218.4 381.3 219.8 381.0 221.7 382.3 224.7 383.6 222.7 383.4 219.8 382.1 217.5 380.9 214.7Z","M298.4 155.3 297.2 153.8 296.1 152.2 294.1 151.0 292.2 151.5 291.1 149.7 291.3 147.6 291.1 145.4 291.1 143.2 289.7 141.2 297.0 140.5 296.7 137.3 298.8 136.0 298.7 130.4 304.6 130.5 304.6 127.1 311.2 132.5 308.5 132.5 309.4 142.0 310.2 151.6 310.2 153.4 303.0 153.4 301.1 154.2 299.3 153.6 298.4 155.3Z","M381.4 213.0 381.4 217.6 383.4 219.8 383.6 222.7 382.3 224.7 381.0 221.7 381.3 219.8 379.0 218.4 378.7 215.8 378.9 213.2 379.2 211.4 379.1 208.9 380.9 210.0 381.4 213.0Z","M499.7 173.9 501.6 173.9 503.0 175.4 503.9 178.4 504.0 181.4 505.3 184.0 502.4 183.2 500.3 181.5 499.0 178.9 498.8 177.1 498.3 174.3ZM530.9 177.7 528.0 178.1 526.0 178.1 525.4 180.6 523.8 184.4 520.6 184.3 518.8 185.6 516.5 185.9 515.0 183.2 517.6 183.5 518.0 181.6 520.9 180.7 522.2 179.0 524.2 178.0 525.2 175.6 526.6 174.0 527.5 172.3 529.1 173.4 530.4 175.0 531.8 176.5Z","M349.1 250.7 347.7 249.0 346.6 245.2 345.6 240.2 345.6 237.6 344.7 235.5 343.7 233.7 342.8 231.0 341.0 227.5 341.7 225.3 343.9 225.0 352.5 225.8 358.0 227.2 361.3 226.3 363.9 225.9 361.9 227.9 358.5 227.8 357.1 235.7 355.4 242.2 355.4 250.4 353.8 251.5 351.7 251.3 349.9 249.6Z","M614.7 234.1 616.2 235.5 614.2 235.4 611.9 232.7 614.2 233.5Z","M323.8 161.2 321.8 159.2 320.8 156.7 320.7 154.6 322.5 153.8 324.9 153.6 326.6 151.9 327.6 145.3 330.1 144.3 335.2 140.0 341.3 135.8 344.1 136.7 346.4 137.1 346.8 140.6 348.3 142.6 347.2 148.0 347.1 150.9 344.8 153.0 344.1 155.9 344.8 158.1 345.2 160.0 343.7 157.7 341.9 158.8 339.5 158.0 336.9 159.2 333.9 158.1 332.1 158.6 329.7 157.0 327.8 157.2 327.1 159.0 326.4 161.9 325.1 160.6Z","M335.1 177.1 333.3 177.8 330.5 178.2 328.9 175.2 327.7 173.7 324.8 173.8 324.9 170.2 325.2 167.4 326.6 165.4 326.4 162.6 326.5 159.9 327.3 157.7 329.7 157.0 331.5 157.8 333.9 158.1 336.0 159.3 338.0 158.3 340.5 158.2 343.3 157.6 344.9 160.1 345.6 162.0 344.1 163.8 343.4 166.3 342.7 168.3 341.4 170.4 340.9 172.2 338.7 172.0 336.9 173.3 335.6 175.5Z","M167.6 163.1 166.2 161.5 165.0 160.1 165.5 158.3 166.9 156.6 168.6 155.5 170.7 155.0 171.7 156.8 171.5 158.6 171.2 161.3 171.3 163.4 169.5 163.1 167.6 163.1Z","M370.1 30.5 375.6 32.1 373.3 32.7 375.3 34.1 372.3 35.0 369.3 32.7 366.5 33.5 365.7 35.1 364.0 36.1 362.1 35.6 359.7 35.7 357.8 34.5 355.6 35.2 352.0 36.3 349.8 37.5 348.6 39.1 346.9 41.5 344.1 44.6 342.4 46.2 341.2 48.3 341.3 51.2 341.9 54.9 340.4 56.4 338.4 56.3 334.9 58.9 332.5 59.4 330.1 58.3 329.4 55.9 328.9 50.8 330.5 49.4 335.2 47.5 338.7 45.3 342.0 42.2 346.2 37.9 349.2 36.3 354.1 33.5 358.0 32.5 360.9 32.7 363.6 30.8 366.9 30.9 370.1 30.5ZM364.0 15.8 360.0 16.7 356.8 16.2 360.7 14.4 364.0 15.8ZM352.4 11.7 358.3 13.3 353.8 14.2 352.8 15.8 350.4 18.1 348.3 18.2 344.5 16.8 340.0 13.5 338.6 11.8 343.4 11.0 346.9 11.8 350.2 10.9 352.4 11.7ZM365.2 10.1 368.7 10.9 366.1 12.1 360.9 12.4 355.7 12.0 352.8 11.3 350.9 10.3 356.4 9.7 358.9 10.2 360.7 9.6 365.2 10.1Z","M476.7 126.1 476.8 128.4 475.1 129.3 472.9 128.8 470.5 127.5 468.1 127.2 465.8 126.0 464.1 124.9 462.4 124.0 463.1 122.0 464.9 120.4 468.2 122.6 469.8 123.9 472.6 125.3 474.6 125.8 476.7 126.1Z","M627.6 277.9 629.8 278.8 629.1 280.8 628.0 282.4 627.7 284.4 624.8 285.2 623.3 288.9 621.0 290.5 618.2 289.7 616.3 289.6 617.0 287.1 619.2 285.0 621.6 283.7 623.2 282.6 625.0 279.8 626.0 278.0ZM630.4 267.4 631.7 269.7 634.2 271.2 636.5 270.5 636.9 272.7 635.0 274.0 634.5 276.0 632.9 278.7 630.5 278.7 631.5 276.9 629.0 274.8 630.4 273.2 630.6 270.1 629.9 268.2 627.7 265.4 629.9 265.4 630.4 267.4Z","M424.6 141.0 423.2 142.4 422.7 145.5 420.6 146.6 419.0 148.1 417.4 150.2 415.2 150.7 413.8 149.3 412.4 145.7 417.8 143.4 419.0 139.0 418.2 136.6 418.7 134.8 419.4 132.6 421.1 134.1 423.4 135.2 425.2 136.8 426.3 138.3 425.4 140.3Z","M453.6 105.6 455.5 108.4 458.4 109.3 456.7 111.1 454.7 111.4 452.0 110.9 451.7 113.8 453.8 116.4 452.3 117.6 450.6 121.4 449.5 123.7 447.6 126.0 445.5 125.8 443.6 128.1 444.9 130.8 446.3 133.8 442.4 133.8 441.2 135.3 439.4 133.2 438.0 131.5 434.7 131.9 431.8 131.9 429.3 132.2 430.0 129.7 432.6 128.5 431.5 125.2 429.8 124.2 428.2 121.8 431.2 122.9 433.0 122.6 435.6 122.5 437.9 121.6 438.0 119.7 440.3 118.5 442.5 117.8 443.1 115.9 445.0 114.0 446.5 111.8 447.3 110.0 446.7 108.0 449.6 106.5 451.7 106.3 453.6 105.6Z","M181.5 171.6 180.6 169.8 179.3 167.7 177.5 169.2 177.3 171.2 175.1 170.6 173.5 169.3 172.6 167.6 174.6 167.8 176.8 167.5 178.5 166.4 180.4 166.8 182.5 168.5 182.3 170.7Z","M196.3 226.4 194.9 228.1 193.1 226.8 189.4 223.7 186.2 221.3 184.9 219.9 184.1 218.1 182.9 214.6 181.2 210.5 179.5 206.1 178.2 203.5 176.8 202.0 176.1 200.1 175.3 198.0 177.2 195.1 177.0 197.4 179.2 198.5 180.5 196.1 181.6 194.2 183.8 193.3 185.7 191.0 186.0 187.9 187.7 188.8 189.0 190.4 190.1 192.7 192.4 192.4 195.5 193.6 194.3 195.8 195.7 197.1 193.9 197.3 190.4 199.2 189.8 201.0 188.9 202.9 189.2 206.2 189.8 208.5 191.7 209.8 194.7 208.5 194.6 211.9 196.4 211.8 197.9 215.3 197.5 217.6 197.4 219.5 197.0 221.4 197.4 224.0 196.3 226.4Z","M544.7 169.0 545.0 171.7 544.3 173.7 543.7 171.5 543.4 174.2 540.8 174.0 540.9 171.3 538.4 171.1 537.0 172.4 537.4 169.9 539.5 168.4 541.5 168.8 543.1 167.8 544.7 169.0ZM540.4 164.9 539.2 167.0 537.6 166.1 538.6 163.6 540.6 162.8 540.4 164.9ZM530.7 167.0 528.3 169.1 530.5 166.2 531.5 164.7 532.5 162.5 532.8 164.3 530.7 167.0ZM543.1 160.7 543.6 163.2 541.9 165.2 541.0 162.2 540.9 159.9 543.1 160.7ZM535.7 146.7 537.5 147.4 537.8 149.9 537.3 151.7 536.0 154.2 536.4 156.0 540.4 157.2 540.6 159.9 538.5 157.7 535.3 157.5 535.1 155.5 533.5 154.5 533.1 151.5 534.0 148.7 534.6 146.7Z","M597.1 202.6 595.1 200.6 594.9 198.7 596.5 201.3ZM590.2 199.7 588.0 201.0 586.2 201.5 583.7 200.3 586.4 199.7 588.6 198.9 589.4 196.8 590.8 198.3ZM581.7 203.9 583.3 205.3 584.4 207.7 586.7 209.0 588.1 210.3 586.3 210.5 583.0 209.9 581.6 208.5 579.6 205.4 577.3 204.4 574.7 205.8 573.6 208.2 570.7 207.7 570.7 200.5 570.7 193.3 573.8 194.8 577.0 196.1 579.3 198.3 582.5 201.0 581.3 202.4ZM592.2 197.5 590.9 195.9 589.1 194.3 591.4 195.7 592.2 197.5Z","M346.7 74.8 346.1 72.6 345.0 70.7 346.3 68.3 349.1 67.3 351.3 66.5 353.1 66.9 355.0 67.5 357.1 67.7 360.4 67.7 361.8 69.6 361.2 71.8 361.8 73.8 362.7 75.7 360.0 78.4 357.1 78.7 355.2 79.0 353.5 78.4 351.4 77.1 348.8 76.3 346.7 74.8Z","M552.2 94.0 550.5 95.8 549.7 97.8 547.5 99.3 546.5 101.0 548.2 102.4 545.9 103.2 544.3 104.3 542.2 103.8 542.5 101.9 541.8 100.1 542.4 98.1 544.3 96.9 545.5 95.3 547.9 96.1 550.4 94.0 552.2 94.0Z","M303.9 95.2 305.8 95.4 308.1 95.2 307.8 98.6 306.7 100.1 306.9 102.9 306.6 105.0 305.1 106.0 304.3 103.1 303.2 100.7 304.0 99.0 304.4 96.7Z","M208.6 236.7 209.3 234.0 210.2 230.9 213.3 230.3 216.6 231.4 217.1 233.3 217.0 236.3 218.9 236.8 220.8 236.9 221.3 239.6 223.5 240.6 223.2 243.1 222.6 246.3 221.0 248.0 217.6 248.0 215.8 247.4 217.5 244.1 215.5 242.3 213.3 240.6 208.6 236.7Z","M360.4 81.9 362.2 81.7 364.2 82.2 366.1 81.7 368.4 82.0 370.0 84.3 369.9 86.2 371.8 87.2 370.8 91.1 368.4 90.1 366.3 90.6 362.8 91.1 360.8 90.9 359.9 88.9 358.2 87.9 355.9 85.8 358.4 83.9 360.4 81.9Z","M575.4 75.6 577.2 79.5 574.5 78.8 573.4 82.0 575.2 84.2 572.6 86.1 572.3 84.3 572.5 82.1 572.3 79.8 572.8 75.1 571.7 73.0 571.9 70.0 573.5 68.9 574.7 71.2 574.6 73.4 575.4 75.6ZM360.4 67.7 357.1 67.7 355.0 67.5 357.8 65.8 359.7 66.2ZM8.9 40.6 14.5 39.9 18.0 42.0 16.2 42.9 13.3 43.2 13.2 45.3 10.9 45.7 7.1 44.3 4.9 43.0 2.9 43.3 0.2 42.2 0.0 44.2 0.0 35.4 4.4 37.1 9.0 39.3ZM2.3 31.1 0.0 31.3 1.7 29.7 4.3 30.3 2.3 31.1ZM575.3 26.0 572.6 26.0 569.0 25.8 572.6 24.6 575.1 25.4ZM588.0 21.9 585.9 22.8 583.1 22.6 579.8 21.7 583.5 21.3 588.0 21.9ZM577.9 20.8 576.5 22.5 570.0 22.4 567.0 22.9 563.5 21.5 566.8 19.6 571.5 19.7 577.9 20.8ZM422.3 31.5 415.4 31.4 411.7 29.8 413.3 28.2 416.8 25.1 419.4 22.9 422.9 20.7 428.7 19.3 434.7 18.9 437.7 18.1 441.2 17.8 434.9 20.4 429.5 21.5 424.0 23.6 421.3 25.7 418.5 27.9 418.9 29.7 422.3 31.5ZM510.2 17.7 512.3 18.3 517.5 18.3 521.5 19.4 522.5 21.3 520.5 22.0 515.8 23.2 519.3 24.7 521.8 25.7 525.5 24.8 531.2 25.2 539.0 26.5 542.9 25.2 545.7 25.2 548.6 26.4 548.4 28.7 550.6 30.5 553.4 31.4 555.1 29.1 558.0 30.0 561.0 29.5 564.4 30.1 568.7 29.8 567.4 27.8 569.7 26.8 585.8 28.2 587.3 29.6 591.9 31.2 599.1 30.8 602.7 31.2 603.9 33.7 606.1 34.3 608.5 33.9 611.6 33.8 615.0 34.3 618.4 34.0 621.5 36.0 623.7 35.3 622.2 33.9 628.7 33.5 632.4 33.4 637.5 34.4 640.0 35.4 640.0 44.2 637.7 45.2 635.4 45.0 637.0 46.2 638.1 48.0 639.1 49.5 635.3 49.6 630.3 51.3 626.0 53.1 623.5 54.4 620.3 53.9 615.6 55.6 613.1 55.8 610.7 55.5 608.0 59.0 610.1 60.4 609.9 63.6 607.5 65.6 605.1 67.7 604.5 70.2 601.8 70.7 601.3 73.0 598.7 75.0 597.3 70.3 596.3 65.4 597.2 62.3 598.7 61.0 601.5 59.5 604.7 56.7 607.8 54.4 611.0 52.7 612.4 49.5 610.2 49.7 609.2 51.5 604.7 54.0 603.2 51.3 598.6 52.0 594.2 55.7 595.6 57.1 591.7 57.6 588.9 57.9 586.3 55.9 584.1 57.0 578.6 56.6 572.8 57.3 567.0 61.6 560.2 66.8 563.0 67.1 565.6 69.0 568.7 68.0 571.3 70.4 571.3 72.3 570.0 74.5 569.8 77.1 569.0 80.7 566.3 83.9 563.3 88.0 560.9 90.5 557.4 93.1 555.2 92.1 552.8 93.7 553.4 90.2 552.9 88.3 556.6 88.0 557.8 85.8 558.4 83.4 560.0 80.6 557.1 81.3 552.9 82.1 552.1 80.0 550.0 78.5 546.9 77.8 546.3 75.6 545.0 73.3 543.9 71.1 539.7 69.6 537.3 69.7 535.1 70.1 533.6 71.2 534.6 72.9 532.1 76.0 529.6 78.3 527.4 77.5 525.3 77.7 523.3 76.7 520.7 78.2 518.4 78.6 514.5 78.8 511.8 77.7 510.0 76.6 508.2 76.3 506.0 76.6 501.8 76.1 499.4 73.9 495.8 72.7 493.9 75.0 492.9 77.8 490.3 77.3 487.4 76.2 485.5 76.1 481.3 76.5 477.9 78.4 476.0 78.8 474.4 77.6 472.1 77.9 470.1 76.6 468.2 74.9 465.7 75.4 463.2 74.2 458.3 69.7 456.0 68.0 452.2 69.4 450.7 68.3 448.4 67.6 446.5 68.1 446.0 65.8 442.8 65.4 441.2 66.3 436.7 67.1 429.2 68.4 429.7 70.7 428.0 71.2 426.6 72.9 429.5 74.4 426.5 75.4 423.8 74.9 420.9 74.9 419.1 75.9 416.9 75.0 413.0 73.4 410.3 73.5 406.6 75.9 404.5 76.2 403.1 78.7 402.6 80.8 404.1 82.3 406.6 83.7 406.5 86.5 403.0 89.1 404.6 91.2 406.4 95.3 405.0 96.8 403.0 95.3 400.8 93.8 398.1 93.7 395.4 92.2 392.8 91.8 388.8 89.9 386.7 89.0 385.2 87.7 388.0 85.5 389.6 83.8 388.0 82.7 390.6 81.9 390.5 79.9 391.2 78.1 388.6 77.4 386.5 76.4 382.9 76.0 380.8 74.5 380.0 72.1 378.2 72.3 376.1 71.2 378.1 69.8 376.4 68.9 374.7 66.6 373.1 64.5 370.1 63.6 369.4 61.3 368.7 58.0 369.7 56.3 371.8 55.1 369.9 54.1 373.7 51.2 375.4 50.0 373.4 47.3 372.5 44.3 373.7 42.4 371.7 39.8 373.3 38.2 370.6 36.7 372.3 35.0 375.3 34.1 377.1 33.3 380.0 34.6 384.9 35.2 391.6 37.7 393.1 40.2 391.1 41.3 388.2 41.9 380.3 40.3 381.9 42.2 382.1 45.4 384.4 46.1 386.1 43.8 390.4 45.2 390.7 43.0 394.8 40.9 398.1 41.8 399.2 40.3 397.7 38.9 397.2 36.3 402.2 37.0 401.0 38.5 402.4 40.5 405.1 40.0 409.3 37.5 415.5 35.6 417.3 37.3 421.9 36.5 424.5 35.6 426.6 36.9 428.6 35.4 426.7 34.2 432.9 34.1 435.4 34.8 441.8 37.3 441.2 35.0 439.0 34.3 438.6 31.5 441.8 28.8 443.0 26.8 449.0 27.0 447.7 30.0 449.4 32.2 449.0 35.3 451.0 36.6 446.7 41.2 448.8 41.5 451.4 40.2 453.4 38.0 453.2 35.3 451.3 35.2 452.3 31.7 450.0 29.9 453.1 28.4 453.8 30.2 455.7 30.6 457.9 28.1 461.6 28.0 464.9 29.2 463.3 27.4 463.1 25.1 466.2 24.6 470.5 24.7 474.4 24.4 472.9 23.3 475.0 21.8 477.0 21.8 480.5 20.7 485.2 20.4 490.4 19.6 495.9 18.9 499.1 18.9 501.3 17.0 505.5 16.1 508.6 16.8 506.1 17.4 510.2 17.7ZM506.8 14.8 496.8 15.6 500.0 12.7 502.8 12.6 507.3 13.9ZM410.9 9.8 408.5 10.1 406.7 10.6 404.6 11.0 402.7 10.5 399.7 9.7 403.2 9.3 405.9 9.3 409.0 9.0 411.6 9.5ZM497.7 13.5 493.8 13.8 488.8 13.1 485.9 12.3 484.5 10.7 482.1 10.3 486.7 8.8 490.6 8.3 494.0 9.4 498.1 11.5 497.7 13.5Z","M374.1 190.1 374.7 192.6 372.7 194.0 372.1 191.2 374.1 190.1Z","M304.4 127.7 304.6 130.5 298.7 130.4 298.8 136.0 296.7 137.3 297.0 140.5 290.1 140.5 293.8 140.1 294.7 138.3 295.3 135.3 297.8 132.9 298.6 130.1 299.7 128.3 301.9 128.3 304.4 127.7Z","M396.1 151.5 395.1 149.0 393.3 146.4 392.8 144.6 391.6 143.1 389.6 140.6 389.5 137.8 388.4 135.3 386.6 134.0 386.2 132.2 385.1 130.6 383.4 127.2 381.6 125.7 381.9 123.7 384.1 123.2 385.3 121.7 387.0 120.6 385.8 118.1 389.3 116.9 391.8 117.2 394.5 118.8 399.5 123.2 402.8 123.4 404.8 124.6 406.8 126.5 409.2 128.7 409.3 131.1 410.3 133.0 411.8 134.6 412.4 136.8 417.8 137.9 417.8 143.4 412.4 145.7 407.3 146.5 405.7 147.5 404.4 149.8 402.4 149.6 400.4 149.1 398.3 149.2 396.7 149.9Z","M380.4 166.7 380.0 164.8 378.8 162.3 378.2 160.6 377.6 163.1 375.7 165.9 373.3 164.9 371.6 166.4 369.7 166.8 367.6 166.7 366.2 165.2 364.1 165.9 363.6 167.9 361.7 167.8 361.9 165.3 360.6 163.0 360.0 160.5 359.6 158.1 359.7 156.0 360.9 153.0 362.4 144.4 364.4 143.4 364.4 139.0 371.6 139.0 378.5 139.0 385.5 139.0 386.1 141.2 386.0 143.9 386.6 146.5 388.3 147.9 386.1 149.5 385.3 151.6 384.6 154.9 384.5 157.7 383.8 159.8 381.9 162.6 380.9 164.1 380.4 166.4Z","M380.4 166.7 380.1 169.1 378.6 170.4 380.6 171.6 382.8 175.4 381.5 176.9 379.4 179.2 376.7 179.7 374.8 179.8 373.3 178.4 371.0 177.8 368.7 176.0 367.1 174.5 365.9 172.2 364.6 170.3 362.5 168.6 364.1 165.9 365.9 164.6 367.1 166.5 369.5 166.4 371.5 166.8 372.7 165.3 374.8 166.2 376.6 164.3 377.4 161.8 379.0 160.7 379.0 163.9 380.2 165.6Z","M290.3 157.6 289.6 155.9 290.3 153.1 291.3 151.3 294.1 151.0 296.1 152.2 297.2 153.8 298.4 155.3 298.8 158.0 299.5 160.1 296.5 159.8 292.4 159.7 290.4 160.3 291.7 158.6 293.8 158.2 290.3 157.6Z","M299.7 172.6 297.9 171.6 296.7 169.6 297.4 167.0 298.8 165.4 300.7 166.2 301.3 168.4 300.2 171.3Z","M163.9 158.0 162.1 158.3 160.3 157.7 160.7 155.9 162.6 156.7 163.9 158.0Z","M407.0 166.7 405.0 169.9 397.7 167.3 396.3 165.5 396.0 163.5 398.4 164.5 401.0 164.0 402.9 163.7 405.4 162.9 407.0 165.6Z","M408.4 162.0 410.2 161.1 410.7 162.9 410.4 164.9 409.9 167.3 409.0 169.8 407.9 172.6 406.4 175.8 404.9 178.3 402.8 181.3 401.0 183.1 398.3 185.3 396.7 186.9 394.7 189.6 393.9 191.3 392.9 189.5 392.9 181.4 394.4 178.9 397.6 176.6 399.9 176.5 405.0 169.9 406.2 168.1 407.0 165.6 407.0 163.3 408.4 162.0Z","M357.1 87.4 358.3 88.8 360.4 89.2 360.0 91.3 359.9 93.6 358.1 93.0 356.0 93.1 354.6 91.9 354.0 89.5 354.5 87.8 354.8 85.7 356.9 86.7Z","M218.4 174.4 220.5 174.8 224.1 174.9 223.1 176.8 224.0 179.6 223.5 181.6 221.2 182.2 219.5 183.4 218.4 181.5 216.8 178.6 218.1 176.4 218.4 174.4Z","M353.5 78.4 355.2 79.0 357.1 78.7 360.1 79.3 358.9 80.9 357.0 80.3 355.1 81.2 353.2 81.9 351.1 81.9 350.2 80.3 351.8 79.5 353.5 78.4Z","M344.5 84.9 346.9 84.6 348.8 84.2 347.9 86.4 345.9 86.9 344.4 86.0Z","M359.4 42.5 357.7 44.1 355.2 47.2 351.7 49.1 350.4 52.2 351.7 53.8 353.4 55.0 351.8 57.5 349.9 58.0 349.2 61.7 348.2 63.8 346.1 63.6 345.1 65.3 343.0 65.4 342.4 63.3 341.0 60.8 339.6 57.7 341.9 54.9 342.5 52.3 341.2 48.3 342.4 46.2 344.7 45.4 346.9 41.5 348.6 39.1 349.8 37.5 352.0 36.3 355.3 36.6 356.7 35.1 359.1 36.2 361.8 37.7 361.9 41.1 359.4 42.5Z","M377.0 246.6 375.6 247.8 374.5 245.8 375.7 244.2 376.9 245.6Z","M389.0 113.9 385.5 116.3 383.5 115.4 384.1 112.9 384.8 111.2 383.8 109.4 385.2 107.6 387.9 106.1 390.3 106.6 392.3 105.7 395.3 105.4 393.4 107.3 392.9 111.6 389.0 113.9Z","M345.8 159.2 344.8 156.7 344.8 153.0 347.1 150.9 347.2 148.0 347.9 143.5 347.5 141.1 346.4 137.1 348.2 135.9 355.3 140.1 362.4 144.4 362.5 153.1 360.1 154.6 360.0 156.5 359.2 159.0 360.0 161.8 358.6 164.3 357.3 166.7 355.7 167.7 353.4 167.8 351.9 170.2 349.7 171.0 347.2 171.2 346.9 169.1 344.8 166.5 346.5 165.5 346.5 163.6 346.5 160.6Z","M323.3 174.0 321.5 173.7 320.9 171.2 321.3 169.2 320.7 166.7 319.9 164.0 321.6 163.3 321.9 165.1 322.6 167.0 322.9 172.5Z","M502.4 160.7 500.8 159.7 499.5 158.0 497.8 160.4 496.9 163.6 496.3 165.6 497.6 167.3 498.3 169.3 498.6 171.2 500.7 172.7 501.0 174.8 498.2 172.9 496.9 171.4 495.1 169.1 495.2 165.7 496.1 163.4 497.0 161.3 496.3 159.3 496.2 157.1 495.0 155.3 495.8 151.9 494.0 148.8 493.1 146.9 494.7 144.1 497.0 143.0 498.9 144.5 499.6 147.0 499.7 148.9 501.5 147.6 503.5 147.2 506.2 149.1 506.3 151.3 507.7 153.2 507.6 155.1 505.4 155.8 503.1 156.2 502.0 158.0 502.4 160.7Z","M446.2 98.8 443.7 99.1 445.4 100.2 447.6 100.9 451.0 100.6 451.4 102.6 453.0 103.7 451.5 105.0 449.1 105.8 447.0 105.8 447.2 103.9 445.9 102.7 444.9 104.3 443.0 105.6 441.1 105.9 441.6 103.4 439.9 101.2 441.8 100.3 443.3 97.7 445.6 97.2Z","M428.8 108.9 428.7 107.1 425.3 105.0 421.9 103.7 419.9 103.9 417.4 105.1 415.5 103.9 415.8 101.6 414.9 99.4 414.1 97.4 417.3 97.2 416.0 95.9 414.1 95.2 416.1 94.2 418.6 96.5 421.5 96.4 422.7 94.5 424.2 93.2 426.6 94.4 427.5 96.6 429.4 96.5 430.9 99.2 432.9 100.7 435.9 102.8 438.3 103.8 436.6 105.3 434.7 107.4 432.3 108.5 430.6 109.7 428.8 108.9Z","M542.2 207.2 543.9 206.2 545.7 205.8 543.9 207.7Z","M336.9 120.7 336.1 116.7 335.0 115.3 333.5 114.0 334.5 111.1 334.9 109.3 334.6 107.2 336.9 105.2 338.1 106.5 338.8 108.3 339.2 110.7 338.4 113.0 340.4 114.5 339.5 116.8 337.7 118.3 337.7 120.2Z","M385.6 96.4 388.2 97.2 390.2 96.9 393.9 95.9 395.8 95.8 397.5 96.9 397.6 98.8 399.6 99.9 399.0 103.1 399.6 105.6 396.1 105.1 393.3 105.8 390.3 106.6 387.9 106.1 385.9 106.8 384.3 108.5 384.3 106.7 381.7 106.4 377.8 107.9 376.4 106.7 374.4 106.6 372.8 107.8 371.1 106.6 369.1 106.7 368.1 104.5 367.7 101.5 368.5 98.4 371.2 98.3 372.0 96.6 375.4 96.9 377.5 95.5 379.6 94.9 382.5 94.8 385.6 96.4ZM368.3 97.8 366.9 99.0 367.3 95.9 369.8 94.9 371.5 96.4 369.1 97.1Z","M536.5 133.8 535.4 137.3 534.7 139.1 533.7 137.2 534.6 133.4 536.0 131.8 536.5 133.8Z","M380.3 189.7 387.0 194.4 389.7 197.9 388.9 200.6 390.1 202.7 389.7 204.6 390.3 207.7 391.0 209.9 390.3 211.6 388.3 212.5 386.6 213.1 382.8 212.8 380.9 210.0 380.0 208.4 377.2 207.3 375.4 206.6 373.7 203.2 372.3 200.7 372.2 197.5 374.2 195.5 374.2 192.9 374.1 190.1 376.7 189.9 380.3 189.7Z","M376.7 189.9 374.7 189.8 373.0 190.8 372.6 188.9 373.1 186.3 374.2 184.1 375.4 182.7 374.8 179.8 376.7 179.7 379.4 179.2 381.3 179.7 382.3 183.4 380.8 186.4 380.3 189.7 376.7 189.9Z","M376.5 72.6 380.0 72.1 380.7 73.8 382.9 75.5 385.1 76.7 387.6 77.4 391.2 78.1 390.5 79.9 390.6 81.9 388.0 82.7 386.5 83.8 383.7 84.6 382.3 86.8 384.9 87.2 382.6 88.4 380.2 89.7 377.7 87.6 379.7 86.4 376.4 85.3 374.7 84.8 372.6 87.6 370.2 87.2 371.4 85.5 373.4 85.1 372.3 83.1 371.0 81.4 368.9 80.6 366.6 81.2 364.8 81.9 362.2 81.7 360.4 81.9 359.6 79.8 361.6 76.6 361.8 73.8 363.6 73.1 366.8 73.2 368.8 73.7 370.9 74.1 373.6 74.1 375.0 72.7Z","M217.6 254.3 220.5 255.7 223.0 257.1 224.4 258.3 225.4 259.8 225.1 262.1 222.3 264.7 220.1 264.5 218.4 263.6 216.1 262.4 216.7 260.5 216.6 258.3 217.1 256.0 217.6 254.3Z","M438.3 105.1 435.9 102.8 434.1 101.8 430.9 99.2 430.0 96.9 427.5 96.6 426.6 94.4 424.2 93.2 422.7 94.5 421.5 96.4 419.5 96.4 419.4 88.3 424.0 87.0 427.1 88.8 430.2 91.6 432.3 91.3 435.4 91.1 437.5 92.7 437.4 94.9 438.6 96.7 440.9 96.8 442.8 96.3 445.1 94.7 446.5 96.8 449.9 97.4 447.6 99.0 445.5 98.8 443.3 97.7 441.8 100.3 439.9 101.2 441.6 103.4 440.6 105.6 438.3 105.1Z","M193.2 161.6 192.7 163.4 191.9 165.8 192.5 167.6 193.7 165.8 193.1 163.4 195.3 162.5 197.5 162.3 198.8 164.3 202.3 164.1 204.6 165.3 207.9 164.0 210.0 163.9 209.1 165.6 211.9 166.9 213.1 168.6 212.4 170.4 212.4 172.5 210.8 174.4 212.0 176.1 209.6 178.4 207.8 179.3 205.1 178.4 205.5 180.7 207.2 182.3 205.9 184.3 203.8 185.2 202.1 186.0 200.6 182.6 200.3 180.3 199.4 177.6 200.0 175.3 198.6 174.0 196.6 174.1 195.4 172.2 192.1 172.2 191.4 169.9 190.6 167.5 190.4 164.5 191.6 163.1 193.2 161.6Z","M512.1 140.0 509.7 141.9 508.2 144.0 509.2 147.9 510.9 150.7 512.5 152.1 513.6 153.9 514.4 158.0 514.1 161.8 512.7 163.3 510.6 164.7 509.2 166.6 506.9 168.6 506.8 165.7 505.5 164.4 508.9 163.4 511.1 160.4 511.3 157.7 511.2 154.0 509.4 150.9 508.3 149.0 506.8 146.4 504.7 145.1 506.4 143.7 505.7 141.8 503.5 141.8 502.7 139.8 501.6 138.0 504.0 137.5 507.3 136.1 509.7 137.3 510.3 139.4 512.1 140.0Z","M414.4 150.8 412.8 152.4 411.0 154.1 408.1 155.1 406.5 156.7 404.2 157.6 401.6 158.1 400.0 159.6 397.3 159.7 396.9 157.2 396.3 154.9 395.9 152.9 396.8 150.8 397.1 148.8 400.4 149.1 402.4 149.6 404.4 149.8 405.7 147.5 407.3 146.5 412.4 145.7 413.8 149.3Z","M376.0 252.2 374.9 253.6 373.4 256.3 371.4 258.6 370.2 259.9 367.0 261.8 364.8 262.2 361.9 262.2 360.1 262.3 358.3 263.2 355.7 264.4 353.5 263.6 352.4 261.0 352.4 259.2 351.2 255.4 350.3 253.5 349.1 250.7 350.9 251.1 352.8 251.7 355.4 250.4 355.4 242.2 356.9 244.7 357.1 246.8 359.3 245.6 360.6 243.9 363.0 244.2 365.6 243.8 366.1 242.1 367.6 241.1 369.8 238.0 372.3 236.3 374.5 236.5 376.3 239.8 376.4 243.8 375.0 245.0 375.6 247.8 377.0 246.6 377.9 248.2 377.7 250.0 376.0 252.2Z","M378.2 208.0 379.5 210.8 378.9 213.2 379.2 215.0 378.1 217.8 373.7 220.2 372.5 222.1 371.2 223.8 369.1 225.7 367.5 227.2 364.9 226.7 362.7 225.8 360.1 224.9 358.9 223.1 359.0 216.1 362.7 216.1 362.5 213.5 363.1 211.8 365.2 212.6 367.2 213.9 370.1 214.7 371.4 216.8 372.7 214.5 370.4 213.6 370.7 211.4 371.0 208.8 371.1 206.4 373.9 205.8 376.1 206.9 378.2 208.0Z","M375.5 236.7 373.0 236.4 371.2 235.3 369.3 233.6 366.5 230.2 365.6 228.5 364.9 226.7 366.9 227.0 369.1 225.7 370.6 223.9 372.5 222.1 375.4 222.6 377.5 223.8 378.4 227.3 378.0 230.4 378.1 232.4 377.3 234.2 375.5 236.7Z"];
+</script>
+
+<script>
+(function () {
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // ---- data ----
+  // Performance data spans the selected date range (read from the top date picker),
+  // keeping the categorised-clicks split: Valid 75.74% / Suspicious 4.62% / Invalid 19.64%.
+  var days = [], valid = [], suspicious = [], invalid = [], total = [], spend = [], conv = [];
+  (function(){
+    var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var txt = (document.querySelector(".select.date") || {}).textContent || "Jun 10, 2026 - Jul 10, 2026";
+    var m = txt.trim().split(" - ");
+    var start = new Date((m[0] || "").trim()), end = new Date((m[1] || m[0] || "").trim());
+    if (isNaN(start.getTime())) start = new Date("Jun 10, 2026");
+    if (isNaN(end.getTime())) end = new Date("Jul 10, 2026");
+    var n = Math.max(1, Math.round((end - start) / 86400000) + 1);
+    for (var i = 0; i < n; i++){
+      var dt = new Date(start.getTime() + i * 86400000);
+      days.push(MON[dt.getMonth()] + " " + dt.getDate());
+      var t = Math.round(2900 + 450 * Math.sin(i * 0.7) + 150 * Math.sin(i * 1.9 + 1));
+      total.push(t);
+      valid.push(Math.round(t * 0.7574));
+      suspicious.push(Math.round(t * 0.0462));
+      invalid.push(Math.round(t * 0.1964));
+      spend.push(+(t * 0.00243).toFixed(1));           // $K/day (clicks x effective CPC)
+      conv.push(Math.round(t * 0.7574 * 0.027));
+    }
+  })();
+  var ann     = [88,86,32,58,70,62,80,66,55,84,74,52,96,64,58,110,72,88,96,80,52,48,90,116,70,64,72,80,68,72];
+
+  var W = 1000, PADL = 46, PADR = 12;
+  // shared day->x mapping (bin centers) so dates, bars and the line align across all charts
+  function xAt(i, n, w) { var slot = (w - PADL - PADR) / n; return PADL + slot * i + slot / 2; }
+
+  // axis labels rendered as HTML (crisp 12px, immune to the chart's non-uniform SVG scaling)
+  function addYLabel(overlayId, topPct, text){
+    var d = document.createElement("div"); d.className = "chart-lbl y";
+    d.style.top = topPct.toFixed(2) + "%"; d.textContent = text;
+    document.getElementById(overlayId).appendChild(d);
+  }
+  function addXLabel(overlayId, leftPct, text){
+    var d = document.createElement("div"); d.className = "chart-lbl x";
+    d.style.left = leftPct.toFixed(2) + "%"; d.textContent = text;
+    document.getElementById(overlayId).appendChild(d);
+  }
+
+  // ---- Clicks line chart ----
+  (function () {
+    var svg = document.getElementById("clicksChart");
+    var H = 250, top = 12, bot = 210, max = 3600;
+    function y(v){ return top + (bot - top) * (1 - v / max); }
+    [1000,2000,3000].forEach(function(g){
+      svg.appendChild(el("line",{x1:PADL,y1:y(g),x2:W-PADR,y2:y(g),stroke:"#212121","stroke-width":1}));
+      addYLabel("clicksLbls", y(g) / H * 100, (g/1000)+"K");
+    });
+    function line(data, color, w){
+      var d = "";
+      data.forEach(function(v,i){ d += (i?"L":"M") + xAt(i,data.length,W).toFixed(1) + " " + y(v).toFixed(1) + " "; });
+      var p = el("path",{d:d,fill:"none",stroke:color,"stroke-width":w,"stroke-linejoin":"round","stroke-linecap":"round"});
+      svg.appendChild(p);
+      return p;
+    }
+    // draw all four series (total drawn last so it sits on top)
+    var lines = {
+      valid: line(valid, "#22c55e", 1.8),
+      suspicious: line(suspicious, "#f59e0b", 1.8),
+      invalid: line(invalid, "#ef4444", 2),
+      total: line(total, "#8b83f0", 2.2)
+    };
+    // legend pills toggle each series
+    function updateSeries(){
+      document.querySelectorAll("#clicksLegend .lg").forEach(function(pill){
+        var s = pill.getAttribute("data-series");
+        if (lines[s]) lines[s].style.display = pill.classList.contains("on") ? "" : "none";
+      });
+    }
+    document.querySelectorAll("#clicksLegend .lg").forEach(function(pill){
+      pill.addEventListener("click", function(){ pill.classList.toggle("on"); updateSeries(); });
+    });
+    updateSeries();
+  })();
+
+  // ---- bar helper ----
+  function bars(id, data, max, color, H, showGrid, gridVals, fmt) {
+    var svg = document.getElementById(id);
+    var top = 10, bot = H - 12;
+    function y(v){ return top + (bot - top) * (1 - v / max); }
+    var overlayId = id.replace("Chart", "Lbls");
+    if (showGrid) gridVals.forEach(function(g){
+      svg.appendChild(el("line",{x1:PADL,y1:y(g),x2:W-PADR,y2:y(g),stroke:"#212121","stroke-width":1}));
+      addYLabel(overlayId, y(g) / H * 100, fmt(g));
+    });
+    var n = data.length, slot = (W - PADL - PADR) / n, bw = slot * 0.62;
+    data.forEach(function(v,i){
+      var x = PADL + slot * i + (slot - bw)/2;
+      var h = (bot - y(v));
+      svg.appendChild(el("rect",{x:x.toFixed(1),y:y(v).toFixed(1),width:bw.toFixed(1),height:Math.max(1,h).toFixed(1),rx:2,fill:color}));
+    });
+  }
+  bars("spendChart", spend, 9.2, "#a78bfa", 170, true, [2,4,6,8], function(g){return "$"+g+"K";});
+  bars("convChart", conv, 105, "#22d3ee", 170, true, [0,50,100], function(g){return ""+g;});
+
+  // ---- conversions x axis ----
+  (function(){
+    var n = days.length, slot = (W - PADL - PADR)/n;
+    var step = Math.max(1, Math.round(n / 10));
+    function slotX(i){ return PADL + slot*i + slot/2; }        // bar charts: bin centers
+    function lineX(i){ return xAt(i, n, W); }                  // line chart: point positions
+    [["clicksXaxis", lineX], ["spendXaxis", slotX], ["convXaxis", slotX]].forEach(function(axis){
+      days.forEach(function(d,i){
+        if (i % step !== 0 && i !== n - 1) return;
+        addXLabel(axis[0], axis[1](i) / W * 100, d);
+      });
+    });
+  })();
+
+  // ---- chart hover indicators + tooltip ----
+  (function(){
+    var tip = document.createElement("div"); tip.className = "chart-tip"; document.body.appendChild(tip);
+    function showTip(cx, cy, date, rows){
+      tip.innerHTML = '<div class="ct-date">' + date + '</div>' + rows.map(function(r){
+        return '<div class="ct-row"><span class="ct-sw" style="background:' + r.color + '"></span><span class="ct-name">' + r.name + '</span><span class="ct-val">' + r.val + '</span></div>';
+      }).join("");
+      tip.style.display = "block"; tip.style.left = cx + "px"; tip.style.top = cy + "px";
+    }
+    function hideTip(){ tip.style.display = "none"; }
+
+    function wrapOf(chartId){ return document.getElementById(chartId).parentNode; }
+
+    // line chart (clicks): crosshair + dots on visible series
+    (function(){
+      var wrap = wrapOf("clicksChart"), H = 250, top = 12, bot = 210, max = 3600, n = total.length;
+      function y(v){ return top + (bot - top) * (1 - v / max); }
+      var S = [
+        {key:"total", name:"Total", color:"#8b83f0", data:total},
+        {key:"valid", name:"Valid", color:"#22c55e", data:valid},
+        {key:"suspicious", name:"Suspicious", color:"#f59e0b", data:suspicious},
+        {key:"invalid", name:"Invalid", color:"#ef4444", data:invalid}
+      ];
+      var cross = document.createElement("div"); cross.className = "chart-cross"; cross.style.display = "none"; wrap.appendChild(cross);
+      var dots = S.map(function(){ var d = document.createElement("div"); d.className = "chart-dot"; d.style.display = "none"; wrap.appendChild(d); return d; });
+      function on(key){ var p = document.querySelector('#clicksLegend .lg[data-series="' + key + '"]'); return p && p.classList.contains("on"); }
+      wrap.addEventListener("mousemove", function(e){
+        var r = wrap.getBoundingClientRect();
+        var i = Math.round((((e.clientX - r.left) / r.width * W - PADL) / (W - PADL - PADR)) * (n - 1));
+        i = Math.max(0, Math.min(n - 1, i));
+        var lp = xAt(i, n, W) / W * 100;
+        cross.style.left = lp + "%"; cross.style.display = "block";
+        var rows = [];
+        S.forEach(function(s, si){
+          if (on(s.key)) {
+            dots[si].style.display = "block"; dots[si].style.left = lp + "%"; dots[si].style.top = (y(s.data[i]) / H * 100) + "%"; dots[si].style.background = s.color;
+            rows.push({name:s.name, color:s.color, val:s.data[i].toLocaleString()});
+          } else dots[si].style.display = "none";
+        });
+        showTip(e.clientX, r.top + 10, days[i], rows);
+      });
+      wrap.addEventListener("mouseleave", function(){ cross.style.display = "none"; dots.forEach(function(d){ d.style.display = "none"; }); hideTip(); });
+    })();
+
+    // bar charts (spend + conversions) are linked: hovering either highlights the same day
+    // in both and shows both values in one tooltip (same idea as the multi-series clicks chart)
+    (function(){
+      var charts = [
+        {id:"spendChart", data:spend, name:"spend", color:"#a78bfa", fmt:function(v){ return "$" + v + "K"; }},
+        {id:"convChart",  data:conv,  name:"conversions", color:"#22d3ee", fmt:function(v){ return "" + v; }}
+      ];
+      charts.forEach(function(c){
+        c.wrap = wrapOf(c.id);
+        c.n = c.data.length;
+        c.slot = (W - PADL - PADR) / c.n;
+        c.hl = document.createElement("div"); c.hl.className = "chart-colhl"; c.hl.style.display = "none"; c.wrap.appendChild(c.hl);
+      });
+      function highlight(i){
+        charts.forEach(function(c){
+          c.hl.style.left = ((PADL + c.slot * i) / W * 100) + "%";
+          c.hl.style.width = (c.slot / W * 100) + "%";
+          c.hl.style.display = "block";
+        });
+      }
+      function clear(){ charts.forEach(function(c){ c.hl.style.display = "none"; }); hideTip(); }
+      function rows(i){ return charts.map(function(c){ return {name:c.name, color:c.color, val:c.fmt(c.data[i])}; }); }
+      charts.forEach(function(c){
+        c.wrap.addEventListener("mousemove", function(e){
+          var r = c.wrap.getBoundingClientRect();
+          var i = Math.floor(((e.clientX - r.left) / r.width * W - PADL) / c.slot);
+          if (i < 0 || i >= c.n) { clear(); return; }
+          highlight(i);
+          showTip(e.clientX, r.top + 10, days[i], rows(i));
+        });
+        c.wrap.addEventListener("mouseleave", clear);
+      });
+    })();
+
+    // annotations chart: crosshair + dot + tooltip
+    (function(){
+      var wrap = wrapOf("annChart");
+      if (!wrap) return;
+      var w = 480, H = 220, top = 10, bot = 208, max = 125, PADL2 = 30, n = ann.length;
+      function y(v){ return top + (bot - top) * (1 - v / max); }
+      function x(i){ return PADL2 + (w - PADL2 - 8) * (i / (n - 1)); }
+      var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      function dayOf(i){ var d = new Date(new Date("Jun 11, 2026").getTime() + i * 86400000); return MON[d.getMonth()] + " " + d.getDate(); }
+      var cross = document.createElement("div"); cross.className = "chart-cross"; cross.style.display = "none"; wrap.appendChild(cross);
+      var dot = document.createElement("div"); dot.className = "chart-dot"; dot.style.display = "none"; dot.style.background = "#ef4444"; wrap.appendChild(dot);
+      wrap.addEventListener("mousemove", function(e){
+        var r = wrap.getBoundingClientRect();
+        var i = Math.round((((e.clientX - r.left) / r.width * w) - PADL2) / (w - PADL2 - 8) * (n - 1));
+        i = Math.max(0, Math.min(n - 1, i));
+        var lp = x(i) / w * 100;
+        cross.style.left = lp + "%"; cross.style.display = "block";
+        dot.style.left = lp + "%"; dot.style.top = (y(ann[i]) / H * 100) + "%"; dot.style.display = "block";
+        showTip(e.clientX, r.top + 10, dayOf(i), [{name:"changes", color:"#ef4444", val:ann[i]}]);
+      });
+      wrap.addEventListener("mouseleave", function(){ cross.style.display = "none"; dot.style.display = "none"; hideTip(); });
+    })();
+  })();
+
+  // ---- Budget legend ----
+  var wasteTypes = [
+    {n:"Lead quality", v:"$18.7K", p:"30%", c:"#b0873c", key:"leadQuality"},
+    {n:"Creative", v:"$9.4K", p:"15%", c:"#d43f9a", key:"creative"},
+    {n:"Measurement", v:"$6.1K", p:"10%", c:"#8a8a92", key:"measurement"},
+    {n:"Invalid traffic", v:"$5.9K", p:"9%", c:"#ef4444", key:"invalidTraffic"},
+    {n:"Signal loss", v:"$4.5K", p:"7%", c:"#3f74e0", key:"signalLoss"},
+    {n:"Post-click", v:"$4.2K", p:"7%", c:"#a3e635", key:"postClick"},
+    {n:"Agentic traffic", v:"$4.2K", p:"7%", c:"#22d3ee", key:"agentic"},
+    {n:"Intent", v:"$4.2K", p:"7%", c:"#14b8a6", key:"intent"},
+    {n:"Bidding", v:"$3.4K", p:"5%", c:"#f0a91e", key:"bidding"},
+    {n:"Brand safety", v:"$2.5K", p:"4%", c:"#6b7280", key:"brandSafety"}
+  ];
+  (function(){
+    var wrap = document.getElementById("budgetLegend");
+    wasteTypes.forEach(function(t){
+      var d = document.createElement("div"); d.className = "wt"; d.setAttribute("data-key", t.key);
+      d.innerHTML = '<div class="wt-name">'+t.n+'</div>'+
+                    '<div class="wt-val-row"><span class="wt-sw" style="background:'+t.c+'"></span>'+
+                    '<span class="wt-val">'+t.v+' <small>'+t.p+'</small></span></div>';
+      wrap.appendChild(d);
+    });
+  })();
+
+  // ---- Sankey (generative: re-flows evenly when waste types are filtered) ----
+  (function(){
+    var svg = document.getElementById("sankeySvg");
+    var box = document.getElementById("skLabels");
+    var wrap = document.getElementById("sankey");
+    var tip = document.createElement("div"); tip.className = "sk-tip"; wrap.appendChild(tip);
+
+    var NC = {
+      budget:"#8b7ff0", leadQuality:"#b0873c", creative:"#d43f9a", measurement:"#8a8a92", invalidTraffic:"#ef4444",
+      signalLoss:"#3f74e0", postClick:"#a3e635", agentic:"#22d3ee", intent:"#14b8a6",
+      bidding:"#f0a91e", brandSafety:"#6b7280", other:"#565660", cleanSpend:"#22c55e",
+      recovered:"#22c55e", recoverable:"#e0a340", unrecoverable:"#ef4444"
+    };
+    var names = {budget:"Total spend",leadQuality:"Lead quality",creative:"Creative",measurement:"Measurement",invalidTraffic:"Invalid traffic",
+      signalLoss:"Signal loss",postClick:"Post-click",agentic:"Agentic traffic",intent:"Intent",bidding:"Bidding",
+      brandSafety:"Brand safety",other:"Other",cleanSpend:"Clean spend",recovered:"Recovered",
+      recoverable:"Recoverable",unrecoverable:"Unrecoverable"};
+
+    // waste types, in order, each with its recovery split ($K to recovered/recoverable/unrecoverable)
+    var WASTE = [
+      {key:"leadQuality",   label:"Lead quality",   disp:"$18.7K", val:18.7, split:{recoverable:8.0, unrecoverable:10.7}},
+      {key:"creative",      label:"Creative",        disp:"$9.4K",  val:9.4,  split:{recoverable:3.4, unrecoverable:6.0}},
+      {key:"measurement",   label:"Measurement",     disp:"$6.1K",  val:6.1,  split:{recoverable:0.9, unrecoverable:5.2}},
+      {key:"invalidTraffic",label:"Invalid traffic", disp:"$5.9K",  val:5.9,  split:{recovered:1.0, recoverable:2.0, unrecoverable:2.9}},
+      {key:"signalLoss",    label:"Signal loss",     disp:"$4.5K",  val:4.5,  split:{recoverable:2.0, unrecoverable:2.5}},
+      {key:"postClick",     label:"Post-click",      disp:"$4.2K",  val:4.2,  split:{unrecoverable:4.2}},
+      {key:"agentic",       label:"Agentic traffic", disp:"$4.2K",  val:4.2,  split:{unrecoverable:4.2}},
+      {key:"intent",        label:"Intent",          disp:"$4.2K",  val:4.2,  split:{recovered:1.2, recoverable:3.0}},
+      {key:"bidding",       label:"Bidding",         disp:"$3.4K",  val:3.4,  split:{recovered:1.0, recoverable:2.4}},
+      {key:"brandSafety",   label:"Brand safety",    disp:"$2.5K",  val:2.5,  split:{recovered:1.0, recoverable:1.5}}
+    ];
+    var CLEAN = {key:"cleanSpend", label:"Clean spend", disp:"$53.1K", val:53.1};
+    var REC = [
+      {key:"recovered",     label:"Recovered",     bold:true},
+      {key:"recoverable",   label:"Recoverable",   bold:true},
+      {key:"unrecoverable", label:"Unrecoverable", bold:false}
+    ];
+
+    var BUD_H = 33, Y_TOP = 20, Y_BOT = 360, BUD_TOP = 20, REC_TOP = 20, REC_GAP = 31.5;
+    function fmtK(v){ return "$" + (Math.round(v * 10) / 10).toFixed(1) + "K"; }
+    var hidden = {};
+    function topPct(y){ return ((y + 34) / 414 * 100).toFixed(2); }
+    var arrow = ' <span class="ar">&rarr;</span> ';
+
+    function render(){
+      svg.innerHTML = ""; box.innerHTML = "";
+      var defs = el("defs", {}); svg.appendChild(defs);
+      var gid = 0;
+
+      // hidden waste types pool into a single "Other" bucket, so the total stays $116.2K
+      var visWaste = WASTE.filter(function(w){ return !hidden[w.key]; });
+      var hiddenList = WASTE.filter(function(w){ return hidden[w.key]; });
+      var otherVal = 0, otherSplit = {recovered:0, recoverable:0, unrecoverable:0};
+      hiddenList.forEach(function(w){ otherVal += w.val; for (var rk in w.split) otherSplit[rk] += w.split[rk]; });
+      var wasteMids = visWaste.concat(otherVal > 0 ? [{key:"other", label:"Other", disp:fmtK(otherVal), val:otherVal, split:otherSplit}] : []);
+      var mids = wasteMids.concat([CLEAN]);       // visible waste + Other (pooled) + clean spend
+      var n = mids.length;
+
+      // total is fixed at $116.2K; fewer individual nodes -> larger scale -> thicker paths
+      var visibleTotal = 0; mids.forEach(function(m){ visibleTotal += m.val; });
+      var SCALE = 2.84 / Math.max(1, n - 1);
+
+      // evenly spaced centers, but pull the top/bottom in by each end node's half-height
+      // so thick nodes never get cut off by the container edges
+      var TOP_LIMIT = 20, BOT_LIMIT = 372;
+      var yTop = TOP_LIMIT + mids[0].val * SCALE / 2;
+      var yBot = BOT_LIMIT - mids[n - 1].val * SCALE / 2;
+      if (yBot < yTop) { yTop = yBot = (TOP_LIMIT + BOT_LIMIT) / 2; }
+      var centers = {};
+      mids.forEach(function(m, i){
+        centers[m.key] = n === 1 ? (yTop + yBot) / 2 : yTop + (yBot - yTop) * i / (n - 1);
+      });
+
+      // recovery $ totals (pooling keeps them constant at 4.2 / 23.2 / 35.7)
+      var recTot = {recovered:0, recoverable:0, unrecoverable:0};
+      wasteMids.forEach(function(w){ for (var rk in w.split) recTot[rk] += w.split[rk]; });
+      var recLayout = {}, ry = REC_TOP;
+      REC.forEach(function(r){
+        var h = recTot[r.key] * SCALE;
+        recLayout[r.key] = {top:ry, h:h, center:ry + h/2, tot:recTot[r.key]};
+        ry += h + REC_GAP;
+      });
+
+      // build flow list: budget -> each mid, then each waste -> recovery
+      var flows = [], budCum = 0;
+      mids.forEach(function(m){
+        var fh = m.val * SCALE;
+        flows.push({src:"budget", tgt:m.key, w:fh, srcY:BUD_TOP + budCum + fh/2, tgtY:centers[m.key], x1:10, x2:647});
+        budCum += fh;
+      });
+      var recIn = {recovered:0, recoverable:0, unrecoverable:0};
+      wasteMids.forEach(function(w){
+        var wc = centers[w.key], wh = w.val * SCALE, outCum = 0;
+        ["recovered","recoverable","unrecoverable"].forEach(function(rk){
+          var amt = w.split[rk]; if (!amt) return;
+          var fh = amt * SCALE, rl = recLayout[rk];
+          flows.push({src:w.key, tgt:rk, w:fh, srcY:wc - wh/2 + outCum + fh/2, tgtY:rl.top + recIn[rk] + fh/2, x1:657, x2:1294});
+          outCum += fh; recIn[rk] += fh;
+        });
+      });
+
+      // draw ribbons
+      var paths = [];
+      flows.forEach(function(f){
+        var g = el("linearGradient", {id:"skg"+gid, gradientUnits:"userSpaceOnUse", x1:f.x1, y1:0, x2:f.x2, y2:0});
+        g.appendChild(el("stop", {offset:"0%", "stop-color":NC[f.src]}));
+        g.appendChild(el("stop", {offset:"100%", "stop-color":NC[f.tgt]}));
+        defs.appendChild(g);
+        var cx = (f.x1 + f.x2) / 2;
+        var d = "M" + f.x1 + "," + f.srcY.toFixed(2) + " C" + cx + "," + f.srcY.toFixed(2) + " " + cx + "," + f.tgtY.toFixed(2) + " " + f.x2 + "," + f.tgtY.toFixed(2);
+        var p = el("path", {d:d, fill:"none", stroke:"url(#skg"+gid+")", "stroke-width":Math.max(f.w, 0.6).toFixed(2), opacity:0.8});
+        p.style.transition = "opacity .12s ease, stroke-width .12s ease";
+        svg.appendChild(p); paths.push(p); f.d = d; gid++;
+      });
+
+      // nodes
+      function node(x, y, h, key){ svg.appendChild(el("rect", {x:x, y:y.toFixed(2), width:10, height:Math.max(h, 0.8).toFixed(2), rx:1.5, fill:NC[key]})); }
+      node(0, BUD_TOP, visibleTotal * SCALE, "budget");
+      mids.forEach(function(m){ node(647, centers[m.key] - m.val * SCALE / 2, m.val * SCALE, m.key); });
+      REC.forEach(function(r){ var rl = recLayout[r.key]; if (rl.h > 0.15) node(1294, rl.top, rl.h, r.key); });
+
+      // labels (above each line)
+      function lab(html, y, side, cls){
+        var d = document.createElement("div");
+        d.className = "sk-lab" + (cls ? " " + cls : "");
+        d.style.top = topPct(y) + "%"; d.style.transform = "translateY(calc(-100% - 8px))";
+        if (side === "L") { d.style.left = "0"; d.style.textAlign = "left"; }
+        else if (side === "M") { d.style.left = "49.6%"; d.style.textAlign = "left"; }
+        else { d.style.right = "0"; d.style.textAlign = "right"; }
+        d.innerHTML = html; box.appendChild(d); return d;
+      }
+      // labels sit above the TOP edge of each node/ribbon (so thick paths never cover the text)
+      lab('<span class="mut">Total spend</span> <b>' + fmtK(visibleTotal) + '</b>', BUD_TOP, "L");
+      mids.forEach(function(m){ lab(m.label + " " + m.disp, centers[m.key] - m.val * SCALE / 2, "M"); });
+      REC.forEach(function(r){ var rl = recLayout[r.key]; if (rl.h > 0.15) lab(r.label + (r.bold ? " <b>" + fmtK(rl.tot) + "</b>" : " " + fmtK(rl.tot)), rl.top, "R", r.bold ? "b" : ""); });
+
+      // hover: highlight the full spend -> waste -> recovery path, show tooltip
+      flows.forEach(function(f, i){
+        var hit = el("path", {d:f.d, fill:"none", stroke:"#000", "stroke-opacity":"0", "stroke-width":Math.max(f.w, 16), "stroke-linecap":"butt"});
+        hit.style.cursor = "pointer"; svg.appendChild(hit);
+        var group = [i], tipHtml;
+        if (f.src === "budget") {
+          flows.forEach(function(ff, j){ if (ff.src === f.tgt) group.push(j); });
+          tipHtml = names.budget + arrow + names[f.tgt] + ' <b>$' + (f.w / SCALE).toFixed(1) + 'K</b>';
+        } else {
+          flows.forEach(function(ff, j){ if (ff.src === "budget" && ff.tgt === f.src) group.push(j); });
+          tipHtml = names.budget + arrow + names[f.src] + arrow + names[f.tgt] + ' <b>$' + (f.w / SCALE).toFixed(1) + 'K</b>';
+        }
+        hit.addEventListener("mouseenter", function(){
+          paths.forEach(function(p, k){ p.setAttribute("opacity", group.indexOf(k) >= 0 ? "1" : "0.06"); });
+          group.forEach(function(k){ paths[k].setAttribute("stroke-width", (Math.max(flows[k].w, 0.6) + 0.9).toFixed(2)); });
+          tip.innerHTML = tipHtml; tip.style.display = "block";
+        });
+        hit.addEventListener("mousemove", function(e){ var rc = wrap.getBoundingClientRect(); tip.style.left = (e.clientX - rc.left) + "px"; tip.style.top = (e.clientY - rc.top) + "px"; });
+        hit.addEventListener("mouseleave", function(){
+          paths.forEach(function(p, k){ p.setAttribute("opacity", "0.8"); p.setAttribute("stroke-width", Math.max(flows[k].w, 0.6).toFixed(2)); });
+          tip.style.display = "none";
+        });
+      });
+    }
+
+    // legend swatches act as checkboxes; toggling re-flows the Sankey evenly
+    document.querySelectorAll(".wt[data-key]").forEach(function(wt){
+      wt.addEventListener("click", function(){
+        var k = wt.getAttribute("data-key");
+        hidden[k] = !hidden[k];
+        wt.classList.toggle("off", !!hidden[k]);
+        var nm = wt.querySelector(".wt-name");
+        wt.title = hidden[k] && nm ? (nm.textContent + " — hidden, pooled into Other") : "";
+        render();
+      });
+    });
+
+    // "Select all" re-enables every waste-type filter
+    var selAll = document.getElementById("sankeySelectAll");
+    if (selAll) selAll.addEventListener("click", function(){
+      var changed = false;
+      document.querySelectorAll(".wt[data-key]").forEach(function(wt){
+        var k = wt.getAttribute("data-key");
+        if (hidden[k]) { hidden[k] = false; wt.classList.remove("off"); wt.title = ""; changed = true; }
+      });
+      if (changed) render();
+    });
+
+    render();
+  })();
+
+  // ---- Keyword waste ----
+  var keywords = [
+    {k:"startup funding", pct:19, n:7},
+    {k:"merchant cash advance", pct:7, n:6},
+    {k:"invoice factoring", pct:19, n:4},
+    {k:"commercial lending rates", pct:11, n:3},
+    {k:"business loan", pct:4, n:3},
+    {k:"refinance business debt", pct:10, n:3},
+    {k:"working capital loan", pct:0, n:3},
+    {k:"business line of credit", pct:11, n:2},
+    {k:"equipment finance", pct:0, n:1}
+  ];
+  (function(){
+    var maxN = 7, wrap = document.getElementById("keywordList");
+    keywords.forEach(function(r){
+      var fw = 22 + (r.n/maxN)*68;
+      var row = document.createElement("div");
+      row.className = "rowwrap";
+      row.innerHTML =
+        '<div class="bar-row red" style="flex:1">'+
+          '<div class="fill" style="width:'+fw+'%"></div>'+
+          '<span class="lbl">'+r.k+'</span>'+
+          '<span class="meta">'+r.pct+'% invalid</span>'+
+        '</div>'+
+        '<span class="row-count">'+r.n+'</span>';
+      wrap.appendChild(row);
+    });
+  })();
+
+  // ---- Search term waste ----
+  var terms = [
+    {t:"commercial lending rates", meta:"4 conv", cost:"$303.2", w:100},
+    {t:"is commercial lending rates legit", meta:"$96.4 wasted", cost:"$96.4", w:40},
+    {t:"diy commercial lending rates", meta:"$65.3 wasted", cost:"$65.3", w:28},
+    {t:"commercial lending rates calculator", meta:"$50.1 wasted", cost:"$50.1", w:22}
+  ];
+  (function(){
+    var wrap = document.getElementById("searchList");
+    terms.forEach(function(r){
+      var row = document.createElement("div");
+      row.className = "rowwrap";
+      row.innerHTML =
+        '<div class="bar-row red" style="flex:1">'+
+          '<div class="fill" style="width:'+r.w+'%"></div>'+
+          '<span class="lbl">'+r.t+'</span>'+
+        '</div>'+
+        '<span class="row-count" style="width:52px">'+r.cost+'</span>';
+      wrap.appendChild(row);
+    });
+  })();
+
+  // ---- Invalid click reasons ----
+  var reasons = [
+    {r:"headless browser fingerprint", pct:19, n:6},
+    {r:"click frequency anomaly", pct:16, n:5},
+    {r:"atypical session depth", pct:16, n:5},
+    {r:"shared proxy IP", pct:16, n:5},
+    {r:"automation framework detected", pct:13, n:4},
+    {r:"repeated identical user agent", pct:9, n:3},
+    {r:"elevated click frequency", pct:9, n:3},
+    {r:"pre-fetch / crawler request", pct:3, n:1}
+  ];
+  (function(){
+    var wrap = document.getElementById("reasonList");
+    reasons.forEach(function(r){
+      var fw = 26 + (r.pct/19)*68;
+      var row = document.createElement("div");
+      row.className = "rowwrap";
+      row.innerHTML =
+        '<div class="bar-row purple" style="flex:1">'+
+          '<div class="fill" style="width:'+fw+'%"></div>'+
+          '<span class="lbl">'+r.r+'</span>'+
+          '<span class="meta">'+r.pct+'% share</span>'+
+        '</div>'+
+        '<span class="row-count">'+r.n+'</span>';
+      wrap.appendChild(row);
+    });
+  })();
+
+  // ---- Attack timing heatmap ----
+  (function(){
+    var cols = ["00-04","04-08","08-12","12-16","16-20","20-24"];
+    var rows = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    // intensity 0..3 per [row][col]
+    var data = [
+      [0,0,0,0,0,0],
+      [0,2,0,0,0,0],
+      [0,0,0,2,3,3],
+      [0,0,0,3,3,3],
+      [0,2,2,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,2,3]
+    ];
+    var wrap = document.getElementById("heat");
+    var colors = ["#141416","#5a1720","#8f1d2c","#c81e33"];
+    var sev = ["No unusual activity","Low","Elevated","High"];
+    var base = [0,14,36,60];
+    wrap.appendChild(Object.assign(document.createElement("div"),{className:"col-h"}));
+    cols.forEach(function(c){ var d=document.createElement("div"); d.className="col-h"; d.textContent=c; wrap.appendChild(d); });
+    rows.forEach(function(rn,ri){
+      var rh=document.createElement("div"); rh.className="row-h"; rh.textContent=rn; wrap.appendChild(rh);
+      for(var ci=0; ci<6; ci++){
+        var lvl = data[ri][ci];
+        var cell=document.createElement("div"); cell.className="cell";
+        cell.style.background = colors[lvl];
+        cell.setAttribute("data-day", rn);
+        cell.setAttribute("data-hour", cols[ci]);
+        cell.setAttribute("data-sev", sev[lvl]);
+        cell.setAttribute("data-count", lvl ? base[lvl] + ci * 2 + ri : 0);
+        wrap.appendChild(cell);
+      }
+    });
+
+    // hover tooltip (delegated so it also works inside the maximized clone)
+    var tip = document.createElement("div"); tip.className = "heat-tip"; document.body.appendChild(tip);
+    document.addEventListener("mouseover", function(e){
+      var c = e.target.closest && e.target.closest(".cell[data-day]");
+      if (!c) return;
+      var cnt = +c.getAttribute("data-count");
+      tip.innerHTML = '<b>' + c.getAttribute("data-day") + ' · ' + c.getAttribute("data-hour") + '</b><br>' +
+        (cnt ? cnt + ' invalid clicks · ' + c.getAttribute("data-sev") : c.getAttribute("data-sev"));
+      tip.style.display = "block";
+    });
+    document.addEventListener("mousemove", function(e){
+      if (tip.style.display !== "block") return;
+      tip.style.left = e.clientX + "px";
+      tip.style.top = (e.clientY - 14) + "px";
+    });
+    document.addEventListener("mouseout", function(e){
+      if (e.target.closest && e.target.closest(".cell[data-day]")) tip.style.display = "none";
+    });
+  })();
+
+  // ---- Geo map: country contours, ranked countries tinted by waste share, hoverable ----
+  (function(){
+    var svg = document.getElementById("geoSvg");
+    if (!svg || typeof WORLD_RANKED === "undefined") return;
+    var meta = {
+      USA:{name:"United States", share:43}, IND:{name:"India", share:13},
+      DEU:{name:"Germany", share:9}, GBR:{name:"United Kingdom", share:8},
+      CAN:{name:"Canada", share:7}, BRA:{name:"Brazil", share:6},
+      FRA:{name:"France", share:5}, NLD:{name:"Netherlands", share:4},
+      AUS:{name:"Australia", share:3}, SGP:{name:"Singapore", share:2}
+    };
+    var maxShare = 43;
+    // unranked countries: neutral contours
+    WORLD_OTHER.forEach(function(d){
+      svg.appendChild(el("path",{d:d, fill:"#191a1c", stroke:"#2c2d31", "stroke-width":0.5}));
+    });
+    var tip = document.createElement("div"); tip.className = "heat-tip"; document.body.appendChild(tip);
+    function attach(node, m){
+      node.style.cursor = "pointer";
+      node.addEventListener("mouseenter", function(){
+        node.setAttribute("opacity", 1);
+        node.setAttribute("stroke", "#fff");
+        tip.innerHTML = "<b>" + m.name + "</b><br>" + (m.share * 10) + " attacks &middot; " + m.share + "% of waste";
+        tip.style.display = "block";
+      });
+      node.addEventListener("mousemove", function(e){ tip.style.left = e.clientX + "px"; tip.style.top = (e.clientY - 14) + "px"; });
+      node.addEventListener("mouseleave", function(){
+        node.setAttribute("opacity", node.getAttribute("data-op"));
+        node.setAttribute("stroke", "#7f1d1d");
+        tip.style.display = "none";
+      });
+    }
+    // ranked countries: red fill, intensity reflects share of waste
+    Object.keys(meta).forEach(function(iso){
+      var m = meta[iso], d = WORLD_RANKED[iso];
+      var op = (0.35 + 0.65 * m.share / maxShare).toFixed(2);
+      var node;
+      if (d) {
+        node = el("path",{d:d, fill:"#ef4444", opacity:op, stroke:"#7f1d1d", "stroke-width":0.6});
+      } else {
+        // Singapore is sub-pixel at this scale - render as a marker at its coordinates
+        var x = (103.82 + 180) / 360 * 640, y = (85 - 1.35) / 145 * 320;
+        node = el("circle",{cx:x.toFixed(1), cy:y.toFixed(1), r:3, fill:"#ef4444", opacity:op, stroke:"#7f1d1d", "stroke-width":0.6});
+      }
+      node.setAttribute("data-op", op);
+      attach(node, m);
+      svg.appendChild(node);
+    });
+  })();
+
+  // ---- Geo ranking list + Map/Ranking toggle ----
+  (function(){
+    var box = document.getElementById("geoRank");
+    if (!box) return;
+    var countries = [
+      ["United States", 43], ["India", 13], ["Germany", 9], ["United Kingdom", 8],
+      ["Canada", 7], ["Brazil", 6], ["France", 5], ["Netherlands", 4], ["Australia", 3], ["Singapore", 2]
+    ];
+    var maxPct = countries[0][1];
+    countries.forEach(function(c, i){
+      var row = document.createElement("div");
+      row.className = "geo-row";
+      row.innerHTML = '<div class="gfill" style="width:' + (12 + (c[1] / maxPct) * 82) + '%"></div>' +
+        '<span class="grank">' + (i + 1) + '</span>' +
+        '<span class="gname">' + c[0] + '</span>' +
+        '<span class="gval">' + c[1] + '% of waste</span>';
+      box.appendChild(row);
+    });
+
+    var group = document.querySelector(".geo-toggle");
+    var views = { map: document.querySelector('[data-geo-view="map"]'), rank: document.querySelector('[data-geo-view="rank"]') };
+    group.querySelectorAll("button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        group.querySelectorAll("button").forEach(function(b){ b.classList.remove("on"); });
+        btn.classList.add("on");
+        var v = btn.getAttribute("data-geo");
+        var swap = function(){
+          views.map.style.display = v === "map" ? "" : "none";
+          views.rank.style.display = v === "rank" ? "" : "none";
+        };
+        if (typeof animateLayout === "function") animateLayout(swap); else swap();
+      });
+    });
+  })();
+
+  // ---- Where it leaks: tabbed waste table ----
+  (function(){
+    var grid = document.getElementById("leaksGrid");
+    if (!grid) return;
+    var TABS = [
+      {name:"Search terms", col:"SEARCH TERM", style:"bars", foot:"TOP 10 OF 214 WASTING SEARCH TERMS", rows:[
+        ["debt consolidation loan reviews","Repeat clicker","$6,240",9.9,"412"],
+        ["free debt help now","Datacentre IP","$4,810",7.6,"388"],
+        ["consolidate my debt bad credit","Headless browser","$3,930",6.2,"291"],
+        ["government debt relief program","No intent match","$2,710",4.3,"244"],
+        ["loan calculator","No intent match","$2,140",3.4,"506"],
+        ["how to consolidate credit cards","Repeat clicker","$1,870",3.0,"233"],
+        ["debt consolidation no credit check","Datacentre IP","$1,650",2.6,"198"],
+        ["best debt consolidation companies","Headless browser","$1,410",2.2,"176"],
+        ["debt settlement vs consolidation","No intent match","$1,180",1.9,"149"],
+        ["free credit repair","Outside targeting","$960",1.5,"131"]
+      ]},
+      {name:"Keywords", col:"KEYWORD", style:"bars", metaFmt:"% of waste", foot:"TOP 10 OF 61 KEYWORDS IN THIS AD GROUP", rows:[
+        ["+debt +consolidation","Broad match drift","$11,420",18.1,"904"],
+        ["&quot;debt help&quot;","Repeat clicker","$7,880",12.5,"661"],
+        ["debt relief","Datacentre IP","$5,120",8.1,"473"],
+        ["consolidate loans","Headless browser","$3,640",5.8,"302"],
+        ["credit card debt","Repeat clicker","$2,290",3.6,"218"],
+        ["+loan +consolidation","Broad match drift","$1,980",3.1,"187"],
+        ["&quot;debt relief program&quot;","Datacentre IP","$1,720",2.7,"164"],
+        ["personal loan debt","No intent match","$1,450",2.3,"139"],
+        ["[debt consolidation loan]","Repeat clicker","$1,210",1.9,"118"],
+        ["credit counseling","Outside targeting","$980",1.6,"102"]
+      ]},
+      {name:"Locations", col:"LOCATION", foot:"TOP 5 OF 38 LOCATIONS &middot; 3 ARE DATACENTRE REGIONS", rows:[
+        ["Ashburn, Virginia","Datacentre IP","$8,910",14.1,"688"],
+        ["Council Bluffs, Iowa","Datacentre IP","$5,470",8.7,"421"],
+        ["Ho Chi Minh City, Vietnam","Outside targeting","$4,020",6.4,"512"],
+        ["The Dalles, Oregon","Datacentre IP","$3,180",5.0,"246"],
+        ["Mumbai, India","Outside targeting","$2,640",4.2,"398"]
+      ]},
+      {name:"Devices", col:"DEVICE", foot:"SAMPLED FROM 1,000 CLICKS &middot; 72 INVALID", rows:[
+        ["Computer","Headless browser","$14,600",23.1,"36"],
+        ["Mobile","Repeat clicker","$9,340",14.8,"26"],
+        ["Tablet","Datacentre IP","$3,110",4.9,"10"]
+      ]},
+      {name:"Reasons", col:"WHY IT WAS FLAGGED", style:"bars", bar:"purple", colName:"Reason", rightHead:"Clicks", right:"clicks", metaFmt:"% share", foot:"", rows:[
+        ["Datacentre IP","Certain","$17,830",28.2,"1,084"],
+        ["Repeat clicker, 8+ per day","Certain","$12,270",19.4,"866"],
+        ["Headless browser signature","Certain","$9,640",15.3,"642"],
+        ["Impossible travel between clicks","Probable","$7,110",11.3,"428"],
+        ["Outside targeted region","Certain","$5,660",9.0,"511"],
+        ["Pre-fetch / crawler request","Certain","$3,480",5.5,"297"],
+        ["Automation framework detected","Certain","$2,650",4.2,"214"],
+        ["Shared proxy IP","Probable","$1,830",2.9,"168"],
+        ["Atypical session depth","Probable","$1,290",2.0,"122"],
+        ["Repeated identical user agent","Certain","$920",1.5,"96"]
+      ]}
+    ];
+    function cardBody(t){
+      var html;
+      if (t.style === "bars") {
+        // module-card look: same bar rows as the "module by module" cards
+        var maxShare = Math.max.apply(null, t.rows.map(function(r){ return r[3]; }));
+        var colName = t.colName || (t.col.charAt(0) + t.col.slice(1).toLowerCase());
+        html = '<div style="padding:8px 16px 0">' +
+          '<div class="tbl-head"><span>' + colName + '</span><span>' + (t.rightHead || "Waste") + '</span></div>';
+        t.rows.forEach(function(r){
+          var fw = 20 + (r[3] / maxShare) * 72;
+          html += '<div class="rowwrap">' +
+            '<div class="bar-row ' + (t.bar || "red") + '" style="flex:1">' +
+              '<div class="fill" style="width:' + fw.toFixed(1) + '%"></div>' +
+              '<span class="lbl">' + r[0] + '</span>' +
+              (t.metaFmt ? '<span class="meta">' + r[3] + t.metaFmt + '</span>' : '') +
+            '</div>' +
+            '<span class="row-count" style="width:64px">' + (t.right === "clicks" ? r[4] : r[2]) + '</span>' +
+          '</div>';
+        });
+        html += '</div>';
+      } else {
+        html = '<div class="leaks-head"><span>' + t.col + '</span>' +
+          '<span style="text-align:right;padding-right:30px">WASTED SPEND</span>' +
+          '<span>SHARE OF WASTE</span>' +
+          '<span style="text-align:right;padding-right:10px">CLICKS</span><span></span></div>';
+        t.rows.forEach(function(r){
+          var prob = r[1] === "Probable";
+          html += '<div class="leaks-row">' +
+            '<div><div class="lk-name">' + r[0] + '</div><span class="lk-tag' + (prob ? ' prob' : '') + '">' + r[1] + '</span></div>' +
+            '<div class="lk-spend">' + r[2] + '</div>' +
+            '<div><div class="lk-bar"><i style="width:' + (r[3] / 32 * 100).toFixed(1) + '%"></i></div><div class="lk-pct">' + r[3] + '%</div></div>' +
+            '<div class="lk-clicks">' + r[4] + '</div>' +
+            '<div class="lk-plus">+</div>' +
+          '</div>';
+        });
+      }
+      return html;
+    }
+    // Reasons leads the section as a full-width row, the rest follow in the grid
+    var ordered = TABS.filter(function(t){ return t.name === "Reasons"; })
+      .concat(TABS.filter(function(t){ return t.name !== "Reasons"; }));
+    var out = "";
+    ordered.forEach(function(t){
+      out += '<div class="leaks-card' + (t.name === "Reasons" ? " wide" : "") + '"><div class="leaks-card-title">' + t.name + '</div>' + cardBody(t) +
+        '<div class="leaks-foot"><span>' + t.foot + '</span><span class="leaks-open">View all rows</span></div></div>';
+    });
+    grid.innerHTML = out;
+  })();
+
+  // ---- Device donut ----
+  (function(){
+    var svg = document.getElementById("donut");
+    var cx=60, cy=60, r=42, sw=16;
+    // share of invalid clicks by device (of 72 invalid in the 1K sample):
+    // Computer 36 (50%), Mobile 26 (36%), Tablet 10 (14%)
+    var segs = [{v:50,c:"#f59e0b"},{v:36,c:"#ef4444"},{v:14,c:"#6b7280"}];
+    var tot = 100, start = -90;
+    var C = 2*Math.PI*r;
+    segs.forEach(function(s){
+      var frac = s.v/tot;
+      var dash = frac*C;
+      var c = el("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:s.c,"stroke-width":sw,
+        "stroke-dasharray":dash+" "+(C-dash),
+        "stroke-dashoffset": -(( (start+90)/360 )*C),
+        transform:"rotate(-90 "+cx+" "+cy+")"});
+      svg.appendChild(c);
+      start += frac*360;
+    });
+  })();
+
+  // ---- Annotations line ----
+  (function(){
+    var svg = document.getElementById("annChart");
+    var w = 480, H = 220, top = 10, bot = 208, max = 125, PADL2 = 30;
+    function y(v){ return top + (bot-top)*(1 - v/max); }
+    function x(i){ return PADL2 + (w-PADL2-8)*(i/(ann.length-1)); }
+    [0,30,60,90,120].forEach(function(g){
+      svg.appendChild(el("line",{x1:PADL2,y1:y(g),x2:w-8,y2:y(g),stroke:"#212121","stroke-width":1}));
+      addYLabel("annLbls", y(g) / H * 100, "" + g);
+    });
+    var d="";
+    ann.forEach(function(v,i){ d += (i?"L":"M") + x(i).toFixed(1)+" "+y(v).toFixed(1)+" "; });
+    svg.appendChild(el("path",{d:d,fill:"none",stroke:"#ef4444","stroke-width":2,"stroke-linejoin":"round"}));
+    // x labels (crisp HTML below the plot)
+    var lbls = ["Jun 11","Jun 14","Jun 18","Jun 22","Jun 26","Jun 30","Jul 3","Jul 6","Jul 10"];
+    var idx = [0,3,7,11,15,19,22,25,29];
+    idx.forEach(function(ii,k){ addXLabel("annXaxis", x(ii) / w * 100, lbls[k]); });
+  })();
+})();
+
+// ---- layout animation helper: 300ms ease-in via View Transitions (instant fallback) ----
+function animateLayout(fn) {
+  if (document.startViewTransition) { document.startViewTransition(fn); } else { fn(); }
+}
+
+// ---- dismissable Lunio summaries ----
+document.addEventListener("click", function (e) {
+  var c = e.target.closest(".ai-sum-close");
+  if (!c) return;
+  var strip = c.closest(".ai-sum");
+  animateLayout(function () { strip.style.display = "none"; });
+});
+
+// ---- Ask Lunio: side-panel assistant ----
+(function () {
+  var panel = document.getElementById("aiPanel");
+  var overlay = document.getElementById("aiOverlay");
+  var msgs = document.getElementById("aiMsgs");
+  var ctxEl = document.getElementById("aiCtx");
+  var input = document.getElementById("aiText");
+  var suggestBox = document.getElementById("aiSuggest");
+  var currentCtx = "";
+
+  // canned, data-aware insights per section (no live backend in this static build)
+  var insights = {
+    "": "This campaign spent $109.5K and wasted $63.1K of it. $23.2K is still recoverable with protection on. Want a protection plan or a negatives pack?",
+    "Performance": "Clicks hold around 1.5K/day with mid-period dips to ~800. Invalid stays near 280/day — about 17% of volume. Your strongest day was Jul 6 with 95 conversions.",
+    "Where this spend goes": "Of $116.2K spend, $63.1K is waste. Lead quality is the biggest leak at $18.7K (30%), then Creative at $9.4K. $23.2K is still recoverable, $35.7K is unrecoverable.",
+    "Campaign modules": "Biggest opportunities: the keyword 'startup funding' (19% invalid) and the 'commercial lending rates' search cluster ($303 wasted). Invalid traffic peaks Wed–Thu evenings.",
+    "Keyword waste": "'startup funding' and 'invoice factoring' both run 19% invalid — the highest here. The suggested negatives pack (business, startup, funding) would remove most of it.",
+    "Search term waste": "The 'commercial lending rates' cluster wasted $303. Adding -commercial, -lending and -rates as negatives cuts the bulk of it.",
+    "Attack timing": "Invalid traffic concentrates Wed–Thu 16:00–24:00 and Sunday evenings. Dayparting or turning protection on during those windows would help.",
+    "Geo waste": "Most waste in this sample originates from North America. Switch to Ranking for the per-region breakdown.",
+    "Device waste": "Computer traffic is the dirtiest at 10% invalid, tablet 8%, mobile cleanest at 5%.",
+    "Change history annotations": "No account changes are recorded in this window, so nothing is annotated on the time series yet.",
+    "Invalid click reasons": "Headless-browser fingerprints (19%) and click-frequency anomalies (16%) dominate. Every classification is explainable — drill any click in Analyze.",
+    "Recent receipts": "The latest action is the Jul 10 pause of this campaign — currently in the measuring phase.",
+    "Change history": "No recorded changes for this campaign in the selected period.",
+    "Protection plan": "Turning protection on filters invalid clicks at click time — no pausing needed. It would make $23.2K of the $63.1K detected waste recoverable; the fastest wins are Lead quality ($8.0K) and Intent ($3.0K).",
+    "Lead quality waste": "Lead quality is the largest leak: $18.7K, 30% of all waste, with $8.0K recoverable. Start with the 19%-invalid keywords 'startup funding' and 'invoice factoring'.",
+    "Creative waste": "Creative accounts for $9.4K (15% of waste), of which $3.4K is recoverable. Rotating the two lowest-performing assets and tightening placements would recover most of it.",
+    "Attack timing windows": "Invalid traffic concentrates Wed–Thu 16:00–24:00 and Sunday evenings. Scheduling protection or tighter bids in those windows cuts roughly 40% of invalid clicks.",
+    "Negatives pack": "The 'commercial lending rates' cluster wasted $303 across 4 terms. Adding -commercial, -lending and -rates as negatives removes ~80% of that spend — about $300/month.",
+    "Datacentre regions": "Ashburn, Council Bluffs and The Dalles are hosting-provider regions, not customers — $17.6K of waste comes from them. Blocking is IP-level (not geo-targeting), takes effect immediately, is reversible, and loses no human traffic. Projected return: +$7.2K over the next 30 days."
+  };
+  var suggestions = ["Where is the most waste?", "Draft a negatives pack", "Why are clicks flagged invalid?"];
+
+  function reply(ctx) { return insights[ctx] != null ? insights[ctx] : insights[""]; }
+
+  function addMsg(text, who) {
+    var d = document.createElement("div");
+    d.className = "msg " + who;
+    d.textContent = text;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+
+  function botRespond(ctx) {
+    var t = addMsg("•••", "ai typing");
+    setTimeout(function () { t.remove(); addMsg(reply(ctx), "ai"); }, 600);
+  }
+
+  function open(ctx) {
+    currentCtx = ctx || "";
+    panel.classList.add("open");
+    overlay.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    if (currentCtx) { ctxEl.hidden = false; ctxEl.textContent = "Context · " + currentCtx; }
+    else { ctxEl.hidden = true; }
+    if (!msgs.dataset.started) {
+      addMsg("Hi — I'm Lunio, your traffic-intelligence assistant. Ask me anything about this campaign.", "ai");
+      msgs.dataset.started = "1";
+    }
+    if (currentCtx) {
+      addMsg("What should I know about " + currentCtx + "?", "user");
+      botRespond(currentCtx);
+    }
+    setTimeout(function () { input.focus(); }, 180);
+  }
+
+  function close() {
+    panel.classList.remove("open");
+    overlay.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+  }
+
+  function send() {
+    var t = input.value.trim();
+    if (!t) return;
+    addMsg(t, "user");
+    input.value = "";
+    input.style.height = "auto";
+    botRespond(currentCtx);
+  }
+
+  // suggestion chips
+  suggestions.forEach(function (s) {
+    var b = document.createElement("button");
+    b.className = "ai-sug";
+    b.textContent = s;
+    b.addEventListener("click", function () { input.value = s; send(); });
+    suggestBox.appendChild(b);
+  });
+
+  // module card header: keep only "Ask Lunio" + "Maximize"
+  document.querySelectorAll(".mod-head").forEach(function (h) {
+    var title = h.querySelector(".mod-title");
+    if (!title) return;
+    var name = title.textContent.trim();
+    var tools = h.querySelector(".mod-tools");
+    if (!tools) { tools = document.createElement("span"); tools.className = "mod-tools"; h.appendChild(tools); }
+    tools.innerHTML = "";
+    var ask = document.createElement("span");
+    ask.className = "ask-ico"; ask.style.cursor = "pointer";
+    ask.setAttribute("data-ask", name);
+    ask.setAttribute("title", "Ask Lunio about " + name);
+    ask.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3z"/></svg>';
+    tools.appendChild(ask);
+    var mx = document.createElement("span");
+    mx.className = "max-ico"; mx.style.cursor = "pointer";
+    mx.setAttribute("data-max", "1");
+    mx.setAttribute("title", "Maximize " + name);
+    mx.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg>';
+    tools.appendChild(mx);
+  });
+
+  // maximize -> open the card in a full-view modal
+  var maxOverlay = document.getElementById("maxOverlay");
+  var maxBody = document.getElementById("maxBody");
+  function openMax(card) {
+    var clone = card.cloneNode(true);
+    clone.querySelectorAll(".mod-tools").forEach(function (t) { t.remove(); });
+    clone.querySelectorAll("[id]").forEach(function (n) { n.removeAttribute("id"); });
+    maxBody.innerHTML = "";
+    maxBody.appendChild(clone);
+    maxOverlay.classList.add("open");
+  }
+  function closeMax() { maxOverlay.classList.remove("open"); maxBody.innerHTML = ""; }
+  document.addEventListener("click", function (e) {
+    var m = e.target.closest("[data-max]");
+    if (m) { var card = m.closest(".mod"); if (card) openMax(card); }
+  });
+  document.getElementById("maxClose").addEventListener("click", closeMax);
+  maxOverlay.addEventListener("click", function (e) { if (e.target === maxOverlay) closeMax(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMax(); });
+
+  // wiring
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-ask]");
+    if (a) { e.preventDefault(); open(a.getAttribute("data-ask")); }
+  });
+  document.getElementById("aiClose").addEventListener("click", close);
+  overlay.addEventListener("click", close);
+  document.getElementById("aiSend").addEventListener("click", send);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  input.addEventListener("input", function () {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+})();
+
+// ---- order sections: "Where this budget goes" before "Performance" ----
+(function () {
+  var sections = [].slice.call(document.querySelectorAll(".content > section.card"));
+  function byTitle(re) { return sections.filter(function (s) { var t = s.querySelector(".sec-title"); return t && re.test(t.textContent); })[0]; }
+  var perf = byTitle(/Performance/);
+  var budget = byTitle(/Where this budget goes/);
+  var leaks = byTitle(/Where the waste comes from/);
+  var todo = byTitle(/What to do/);
+  var did = byTitle(/What it did/);
+  if (perf && budget) perf.parentNode.insertBefore(budget, perf);
+  if (perf && leaks) perf.parentNode.insertBefore(leaks, perf);
+  if (perf && todo) perf.parentNode.insertBefore(todo, perf);
+  if (perf && did) perf.parentNode.insertBefore(did, perf);       // budget -> leaks -> what to do -> what it did -> performance
+})();
+
+// ---- hover descriptions on every module card ----
+(function () {
+  var desc = {
+    "Keyword waste": "Keywords ranked by how many clicks were flagged invalid in this campaign, with each keyword's invalid share.",
+    "Search term waste": "Search terms driving wasted spend, with suggested negative keywords to block the worst offenders.",
+    "Attack timing": "When invalid traffic concentrates — invalid clicks broken down by day of week and four-hour window.",
+    "Geo waste": "Where invalid traffic originates. Switch to Ranking for the share of waste per country.",
+    "Device waste": "Share of clicks flagged invalid by device type — mobile, computer and tablet.",
+    "Change history annotations": "Overlay recorded account changes onto any time series to explain shifts in the data.",
+    "Invalid click reasons": "Why clicks were flagged invalid, by detection signal, with each reason's share of invalid volume.",
+    "Recent receipts": "Executed actions from the value ledger that mention this campaign.",
+    "Change history": "Recorded changes to this campaign within the selected period."
+  };
+  var infoSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
+  document.querySelectorAll(".modules .mod").forEach(function (card) {
+    var title = card.querySelector(".mod-title");
+    if (!title) return;
+    var d = desc[title.textContent.trim()];
+    if (!d) return;
+    var info = card.querySelector(".mod-info");
+    if (!info) {
+      info = document.createElement("span");
+      info.className = "mod-info";
+      info.innerHTML = infoSvg;
+      title.appendChild(document.createTextNode(" "));
+      title.appendChild(info);
+    }
+    var box = document.createElement("span");
+    box.className = "ihint-box" + (card.closest(".mod-rail") ? " ihint-box--r" : "");
+    box.textContent = d;
+    info.appendChild(box);
+  });
+})();
+
+// ---- "Sections" filter: choose which module cards to show ----
+(function () {
+  var btn = document.getElementById("secFilterBtn");
+  var menu = document.getElementById("secFilterMenu");
+  if (!btn || !menu) return;
+  var countEl = btn.querySelector(".fc");
+  var tick = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg>';
+  var items = [];
+
+  var head = document.createElement("div");
+  head.className = "fm-head";
+  head.innerHTML = '<span class="fm-title">SECTIONS</span><span class="fm-actions"><button class="fm-act" data-all="1">All</button><button class="fm-act" data-all="0">None</button></span>';
+  menu.appendChild(head);
+
+  function setOn(rec, on) { rec.on = on; rec.item.classList.toggle("on", on); rec.card.style.display = on ? "" : "none"; }
+  function updateCount() { countEl.textContent = items.filter(function (r) { return r.on; }).length + "/" + items.length; }
+  var railEl = document.querySelector(".mod-rail");
+  var modulesEl = document.querySelector(".modules");
+  function updateRail() {
+    if (!railEl || !modulesEl) return;
+    var anyVisible = [].slice.call(railEl.querySelectorAll(".mod")).some(function (m) { return m.style.display !== "none"; });
+    railEl.style.display = anyVisible ? "" : "none";
+    modulesEl.classList.toggle("rail-collapsed", !anyVisible);
+  }
+
+  function cleanName(el){
+    var s = "";
+    [].slice.call(el.childNodes).forEach(function (nn) { if (nn.nodeType === 3) s += nn.textContent; });
+    return (s.trim() || el.textContent.trim());
+  }
+  [].slice.call(document.querySelectorAll(".modules .mod")).forEach(function (card) {
+    var titleEl = card.querySelector(".mod-title");
+    if (!titleEl) return;
+    var name = cleanName(titleEl);
+    var defaultOn = !/^(Recent receipts|Change history)$/.test(name);   // rail cards start deselected
+    var it = document.createElement("div");
+    it.className = "fm-item" + (defaultOn ? " on" : "");
+    it.innerHTML = '<span class="fm-check">' + tick + '</span><span>' + name + '</span>';
+    menu.appendChild(it);
+    var rec = { card: card, item: it, on: defaultOn };
+    items.push(rec);
+    if (!defaultOn) card.style.display = "none";
+    it.addEventListener("click", function (e) { e.stopPropagation(); animateLayout(function(){ setOn(rec, !rec.on); updateCount(); updateRail(); }); });
+  });
+
+  head.querySelectorAll(".fm-act").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var on = a.getAttribute("data-all") === "1";
+      animateLayout(function(){ items.forEach(function (r) { setOn(r, on); }); updateCount(); updateRail(); });
+    });
+  });
+
+  btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("open"); });
+  document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("open"); });
+  updateCount();
+  updateRail();
+})();
+
+// ---- "Charts" filter: choose which Performance charts to show ----
+(function () {
+  var btn = document.getElementById("perfFilterBtn");
+  var menu = document.getElementById("perfFilterMenu");
+  if (!btn || !menu) return;
+  var countEl = btn.querySelector(".fc");
+  var tick = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg>';
+  var items = [];
+
+  var head = document.createElement("div");
+  head.className = "fm-head";
+  head.innerHTML = '<span class="fm-title">CHARTS</span><span class="fm-actions"><button class="fm-act" data-all="1">All</button><button class="fm-act" data-all="0">None</button></span>';
+  menu.appendChild(head);
+
+  function setOn(rec, on) { rec.on = on; rec.item.classList.toggle("on", on); rec.block.style.display = on ? "" : "none"; }
+  function updateCount() { countEl.textContent = items.filter(function (r) { return r.on; }).length + "/" + items.length; }
+
+  var section = btn.closest("section");
+  [].slice.call(section.querySelectorAll(".chart-block")).forEach(function (block) {
+    var nameEl = block.querySelector(".chart-name");
+    if (!nameEl) return;
+    var it = document.createElement("div");
+    it.className = "fm-item on";
+    it.innerHTML = '<span class="fm-check">' + tick + '</span><span>' + nameEl.textContent.trim() + '</span>';
+    menu.appendChild(it);
+    var rec = { block: block, item: it, on: true };
+    items.push(rec);
+    it.addEventListener("click", function (e) { e.stopPropagation(); animateLayout(function(){ setOn(rec, !rec.on); updateCount(); }); });
+  });
+
+  head.querySelectorAll(".fm-act").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var on = a.getAttribute("data-all") === "1";
+      animateLayout(function(){ items.forEach(function (r) { setOn(r, on); }); updateCount(); });
+    });
+  });
+
+  btn.addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("open"); });
+  document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("open"); });
+  updateCount();
+})();
+</script>
+</body>
+</html>
