@@ -199,7 +199,7 @@
   ];
 
   // Pre-render a sprite with a 1-pixel black outline at a given scale
-  function makeSprite(rows, scale, outline = true) {
+  function makeSprite(rows, scale, outline = true, outlineColor = C.black) {
     const w = Math.max(...rows.map(r => r.length)), h = rows.length;
     const pad = outline ? 1 : 0;
     const cv = document.createElement('canvas');
@@ -208,7 +208,7 @@
     const g = cv.getContext('2d');
     const solid = (x, y) => y >= 0 && y < h && x >= 0 && rows[y][x] && rows[y][x] !== '.';
     if (outline) {
-      g.fillStyle = C.black;
+      g.fillStyle = outlineColor;
       for (let y = -1; y <= h; y++)
         for (let x = -1; x <= w; x++)
           if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1)))
@@ -231,8 +231,8 @@
     dead: makeSprite(leninDead, 2, false),
     hsSmall: makeSprite(hammerSickle, 2),
     hsBig: makeSprite(hammerSickle, 3),
-    star: makeSprite(star, 2),
-    starIcon: makeSprite(star, 1),
+    star: makeSprite(star, 2, true, C.yellow),
+    starIcon: makeSprite(star, 1, true, C.yellow),
     leninRide: makeSprite(leninTop, 2, false),
     horseA: makeSprite(horseA, 2),
     horseB: makeSprite(horseB, 2),
@@ -276,19 +276,99 @@
   try { hi = parseInt(localStorage.getItem('lenin64-hi') || '0', 10) || 0; } catch (e) {}
   function saveHi() { try { localStorage.setItem('lenin64-hi', String(hi)); } catch (e) {} }
 
-  // ---- Background: factory skyline ----
-  const skyline = [];
-  (function genSkyline() {
-    let x = 0;
-    while (x < W * 2) {
-      const w = 14 + Math.floor(Math.random() * 30);
-      const h = 10 + Math.floor(Math.random() * 30);
-      const chimney = Math.random() < 0.5 ? { off: 2 + Math.floor(Math.random() * (w - 6)), h: 8 + Math.floor(Math.random() * 14) } : null;
-      skyline.push({ x, w, h, chimney });
-      x += w + Math.floor(Math.random() * 6);
+  // ---- Background: Red Square (Kremlin wall, Spasskaya tower, Mausoleum, St Basil's) ----
+  const BG_W = 640;
+  const BG = document.createElement('canvas');
+  BG.width = BG_W; BG.height = H;
+  (function paintRedSquare() {
+    const g = BG.getContext('2d');
+    const rect = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    const tri = (cx, top, base, halfW, c) => {      // pixel-stepped spire
+      for (let y = top; y < base; y++) {
+        const hw = Math.max(1, Math.round(halfW * (y - top) / (base - top)));
+        rect(cx - hw, y, hw * 2, 1, c);
+      }
+    };
+    const topStar = (cx, y) => g.drawImage(SPR.starIcon, cx - 5, y);
+    const WALL = GROUND - 34;
+
+    // Kremlin wall with swallowtail merlons and brick courses
+    rect(0, WALL, BG_W, GROUND - WALL, C.red);
+    for (let y = WALL + 5; y < GROUND; y += 6) rect(0, y, BG_W, 1, C.brown);
+    for (let x = 2; x < BG_W; x += 12) {
+      rect(x, WALL - 7, 7, 7, C.red);
+      rect(x + 3, WALL - 7, 1, 3, C.blue);        // the swallowtail notch
+      rect(x, WALL - 7, 7, 1, C.lred);
     }
+
+    // a tower: stacked tiers, optional clock, green tent spire, red star
+    function tower(cx, w, top, clock) {
+      rect(cx - w / 2, top, w, GROUND - top, C.red);
+      for (let y = top + 6; y < GROUND; y += 6) rect(cx - w / 2, y, w, 1, C.brown);
+      rect(cx - w / 2 - 2, top, w + 4, 3, C.lred);                // cornice
+      for (let x = cx - w / 2 + 3; x < cx + w / 2 - 3; x += 6) rect(x, top + 12, 2, 6, C.black); // windows
+      const t2 = top - 16, w2 = w - 8;
+      rect(cx - w2 / 2, t2, w2, 16, C.red);
+      rect(cx - w2 / 2 - 1, t2, w2 + 2, 2, C.white);
+      if (clock) {
+        rect(cx - 5, t2 + 4, 10, 10, C.white);
+        rect(cx - 3, t2 + 2, 6, 14, C.white);
+        rect(cx - 7, t2 + 6, 14, 6, C.white);
+        rect(cx, t2 + 5, 1, 4, C.black); rect(cx, t2 + 8, 4, 1, C.black);
+      }
+      const spireTop = t2 - (clock ? 34 : 24);
+      tri(cx, spireTop, t2, w2 / 2 + 1, C.green);
+      rect(cx, spireTop - 2, 1, 2, C.yellow);
+      topStar(cx, spireTop - 10);
+    }
+
+    // Onion dome on a drum, with horizontal stripes
+    const PROFILE = [1, 1, 2, 4, 6, 7, 7, 6, 4];
+    function onion(cx, top, scale, c1, c2, drumBottom) {
+      rect(cx - 3 * scale, top + PROFILE.length * 2, 6 * scale, drumBottom - top - PROFILE.length * 2, C.white);
+      rect(cx - 3 * scale + 2, top + PROFILE.length * 2 + 3, 2, 4, C.black);
+      PROFILE.forEach((hw, i) => {
+        const w = Math.max(1, Math.round(hw * scale));
+        rect(cx - w, top + i * 2, w * 2, 2, i % 2 ? c1 : c2);
+      });
+      rect(cx, top - 4, 1, 4, C.yellow);
+    }
+
+    tower(70, 30, 78, true);           // Spasskaya tower with the Kremlin clock
+    tower(330, 20, 96, false);         // Senate tower
+    tower(612, 18, 104, false);        // corner tower
+
+    // Lenin's Mausoleum: stepped dark granite with a red band
+    const mx = 170;
+    rect(mx, GROUND - 22, 80, 22, C.dgrey);
+    rect(mx, GROUND - 14, 80, 3, C.red);
+    rect(mx + 10, GROUND - 30, 60, 8, C.dgrey);
+    rect(mx + 20, GROUND - 36, 40, 6, C.grey);
+    rect(mx + 28, GROUND - 44, 24, 8, C.dgrey);
+    for (let x = mx + 30; x < mx + 50; x += 4) rect(x, GROUND - 43, 2, 6, C.black);
+    rect(mx + 34, GROUND - 10, 12, 10, C.black);                  // entrance
+
+    // St Basil's Cathedral
+    const bx = 420;
+    rect(bx, GROUND - 40, 110, 40, C.lred);
+    for (let x = bx + 4; x < bx + 106; x += 10) {
+      rect(x, GROUND - 32, 4, 8, C.white);
+      rect(x + 1, GROUND - 30, 2, 6, C.black);
+    }
+    rect(bx, GROUND - 40, 110, 2, C.white);
+    // central tent tower
+    rect(bx + 47, GROUND - 76, 16, 36, C.lred);
+    rect(bx + 47, GROUND - 76, 16, 2, C.white);
+    tri(bx + 55, GROUND - 112, GROUND - 76, 9, C.yellow);
+    for (let y = GROUND - 104; y < GROUND - 78; y += 6) rect(bx + 50, y, 10, 1, C.green);
+    rect(bx + 55, GROUND - 118, 1, 6, C.yellow);
+    onion(bx + 55, GROUND - 124, 0.9, C.yellow, C.orange, GROUND - 112);
+    // surrounding domes
+    onion(bx + 14, GROUND - 76, 1.5, C.green, C.yellow, GROUND - 40);
+    onion(bx + 34, GROUND - 94, 1.8, C.red, C.white, GROUND - 40);
+    onion(bx + 76, GROUND - 96, 1.8, C.cyan, C.yellow, GROUND - 40);
+    onion(bx + 96, GROUND - 76, 1.5, C.purple, C.lgreen, GROUND - 40);
   })();
-  const SKY_W = skyline[skyline.length - 1].x + skyline[skyline.length - 1].w + 4;
 
   const groundBits = Array.from({ length: 40 }, () => ({
     x: Math.random() * W, y: GROUND + 4 + Math.floor(Math.random() * 20), w: 1 + Math.floor(Math.random() * 3)
@@ -310,7 +390,7 @@
     speed = 3.6;
     score = 0;
     nextSpawn = 80;
-    skyOff = 0;
+    skyOff = 150;
     frame = 0;
     flash = 0;
   }
@@ -422,7 +502,7 @@
     }
 
     // world scroll
-    skyOff = (skyOff + move * 0.25) % SKY_W;
+    skyOff = (skyOff + move * 0.35) % BG_W;
     for (const g of groundBits) {
       g.x -= move;
       if (g.x < -4) { g.x = W + Math.random() * 20; g.y = GROUND + 4 + Math.floor(Math.random() * 20); }
@@ -517,20 +597,18 @@
     ctx.fillRect(246, 34, 32, 16);
     ctx.fillRect(254, 26, 16, 32);
 
-    // skyline (two copies for seamless wrap)
-    ctx.fillStyle = '#5446A6';
-    for (let k = 0; k < 2; k++) {
-      for (const b of skyline) {
-        const x = Math.floor(b.x - skyOff + k * SKY_W);
-        if (x > W || x + b.w < 0) continue;
-        ctx.fillRect(x, GROUND - b.h, b.w, b.h);
-        if (b.chimney) ctx.fillRect(x + b.chimney.off, GROUND - b.h - b.chimney.h, 4, b.chimney.h);
-      }
-    }
+    // Red Square backdrop (two copies for seamless wrap)
+    const bx = Math.floor(-skyOff);
+    ctx.drawImage(BG, bx, 0);
+    ctx.drawImage(BG, bx + BG_W, 0);
 
     // ground
-    ctx.fillStyle = C.lblue;
+    // cobblestones
+    ctx.fillStyle = C.dgrey;
+    ctx.fillRect(0, GROUND, W, H - GROUND);
+    ctx.fillStyle = C.lgrey;
     ctx.fillRect(0, GROUND, W, 2);
+    ctx.fillStyle = C.grey;
     for (const g of groundBits) ctx.fillRect(Math.floor(g.x), g.y, g.w, 1);
   }
 
