@@ -160,6 +160,10 @@
     '....VVVV....',
     '...KKKKK....',
   ]);
+  // Aiming pose: rifle shouldered and pointed left at Lenin (4 extra columns on the left)
+  const bolAim = bolA.map(r => '....' + r.slice(0, 11) + '.');
+  bolAim[10] = 'GOOOOO' + bolAim[10].slice(6);
+  bolAim[11] = bolAim[11].slice(0, 4) + 'S' + bolAim[11].slice(5);
 
   // Horse, facing right (N body, M mane/tail)
   const horseTop = [
@@ -239,6 +243,7 @@
     horseDead: makeSprite(horseDead, 2),
     bolA: makeSprite(bolA, 2),
     bolB: makeSprite(bolB, 2),
+    bolAim: makeSprite(bolAim, 2),
   };
 
   // ---- Sound: SID-ish square waves ----
@@ -249,6 +254,16 @@
     }
     if (actx && actx.state === 'suspended') actx.resume();
     return actx;
+  }
+  function noise(dur, vol = 0.12) {
+    const a = audio(); if (!a) return;
+    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = a.createBufferSource(), gn = a.createGain();
+    src.buffer = buf; gn.gain.value = vol;
+    src.connect(gn).connect(a.destination);
+    src.start();
   }
   function tone(f1, f2, dur, type = 'square', vol = 0.08, delay = 0) {
     const a = audio(); if (!a) return;
@@ -267,6 +282,7 @@
     point: () => { tone(660, 660, 0.08); tone(990, 990, 0.12, 'square', 0.08, 0.09); },
     mount: () => [392, 523, 659, 784].forEach((f, i) => tone(f, f, 0.08, 'square', 0.07, i * 0.06)),
     neigh: () => { tone(900, 500, 0.12, 'sawtooth', 0.07); tone(800, 300, 0.25, 'sawtooth', 0.07, 0.12); tone(200, 50, 0.3, 'triangle', 0.12, 0.35); },
+    shot: () => { noise(0.25, 0.2); tone(180, 60, 0.15, 'square', 0.06); },
     coin: () => { tone(988, 988, 0.05, 'square', 0.07); tone(1319, 1319, 0.14, 'square', 0.07, 0.05); },
     die: () => { tone(440, 55, 0.6, 'sawtooth', 0.1); tone(300, 40, 0.6, 'square', 0.06, 0.05); },
   };
@@ -418,7 +434,7 @@
       // Marching Bolshevik(s), walking toward Lenin
       const n = score > 400 && Math.random() < 0.35 ? 2 : 1;
       for (let i = 0; i < n; i++)
-        obstacles.push({ type: 'bol', x: x0 + i * 30, y: GROUND - 40, w: 28, h: 40, t: Math.random() * 12 });
+        obstacles.push({ type: 'bol', x: x0 + i * 30, y: GROUND - 40, w: 28, h: 40, t: Math.random() * 12, shooter: i === 0 && Math.random() < 0.45 });
       width = n * 30; height = 40;
     } else if (r < 0.6) {
       obstacles.push({ type: 'hs', x: x0, y: GROUND - 30, w: 30, h: 30, spr: SPR.hsSmall });
@@ -511,10 +527,28 @@
     nextSpawn -= move;
     if (nextSpawn <= 0) spawn();
 
+    const shots = [];
     for (const o of obstacles) {
+      if (o.type === 'bullet') { o.x -= move + 4.5 * dt; continue; }
+      if (o.flash > 0) o.flash -= dt;
+      // Some Bolsheviks stop, take aim and fire one shot at Lenin
+      if (o.shooter && o.aim === undefined && o.x < W - 60 && o.x - (player.x + player.w) > 100 &&
+          !obstacles.some(q => q !== o && q.x < o.x && q.x + q.w > player.x)) o.aim = 0;   // only with a clear line of fire
+      if (o.aim !== undefined && (!o.fired || o.flash > 0)) {
+        o.x -= move;                       // standing still while aiming
+        o.aim += dt;
+        if (!o.fired && o.aim > 24) {
+          o.fired = true;
+          o.flash = 10;
+          shots.push({ type: 'bullet', x: o.x - 22, y: GROUND - 26, w: 16, h: 14 });
+          sfx.shot();
+        }
+        continue;
+      }
       o.x -= move * (o.type === 'bol' ? 1.12 : 1);
       if (o.type === 'bol') o.t += dt;
     }
+    obstacles.push(...shots);
     obstacles = obstacles.filter(o => o.x + o.w > -10);
 
     // red stars: collect for bonus points
@@ -640,8 +674,25 @@
 
   function drawObstacles() {
     for (const o of obstacles) {
+      const x = Math.floor(o.x), y = Math.floor(o.y);
+      if (o.type === 'bullet') {
+        ctx.fillStyle = C.lgrey; ctx.fillRect(x + 8, y + 7, 10, 1);   // smoke trail
+        ctx.fillStyle = C.white; ctx.fillRect(x + 4, y + 6, 6, 3);
+        ctx.fillStyle = C.yellow; ctx.fillRect(x + 2, y + 6, 2, 3);
+        continue;
+      }
+      if (o.type === 'bol' && o.aim !== undefined && (!o.fired || o.flash > 0)) {
+        ctx.drawImage(SPR.bolAim, x - 8, y);
+        if (o.flash > 0) {                                           // muzzle flash
+          ctx.fillStyle = C.yellow; ctx.fillRect(x - 16, y + 18, 6, 6);
+          ctx.fillStyle = C.white; ctx.fillRect(x - 14, y + 20, 3, 2);
+        } else if (Math.floor(o.aim / 4) % 2) {                      // warning "!"
+          text('!', x + 14, y - 4, C.yellow, 'center');
+        }
+        continue;
+      }
       const spr = o.type === 'bol' ? (Math.floor(o.t / 7) % 2 ? SPR.bolA : SPR.bolB) : o.spr;
-      ctx.drawImage(spr, Math.floor(o.x), Math.floor(o.y));
+      ctx.drawImage(spr, x, y);
     }
   }
 
