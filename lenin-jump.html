@@ -62,7 +62,7 @@
 
   // ---- Sprites ----
   // K black, S skin, H hair, B suit, R red, W white, Y yellow, D dark grey
-  const PAL = { O: C.brown, V: C.green, K: C.black, S: C.lred, H: C.orange, B: C.dgrey, R: C.red, W: C.white, Y: C.yellow, D: C.grey, G: C.lgrey };
+  const PAL = { N: C.orange, M: C.black, O: C.brown, V: C.green, K: C.black, S: C.lred, H: C.orange, B: C.dgrey, R: C.red, W: C.white, Y: C.yellow, D: C.grey, G: C.lgrey };
 
   const leninTop = [
     '....KKKK....',
@@ -161,6 +161,33 @@
     '...KKKKK....',
   ]);
 
+  // Horse, facing right (N body, M mane/tail)
+  const horseTop = [
+    '..............NN....',
+    '.............MNNN...',
+    '............MMNNNN..',
+    '...........MMNNNNNN.',
+    '...........MNNNKNNNN',
+    '...........MNNNNNNNN',
+    '..NNNNNNNNNMNNN.....',
+    '.MNNNNNNNNNNNNN.....',
+    'M.NNNNNNNNNNNNN.....',
+    'M.NNNNNNNNNNNNN.....',
+  ];
+  const horseA = horseTop.concat([
+    'M..NNN.....NNN......',
+    '...NN.......NN......',
+    '...NN.......NN......',
+    '...KK.......KK......',
+  ]);
+  const horseB = horseTop.concat([
+    '..NNN.......NNN.....',
+    '..N.N......N..N.....',
+    '.N...N....N....N....',
+    'K.....K..K......K...',
+  ]);
+  const horseDead = horseA.slice().reverse();
+
   const star = [
     '....R....',
     '...RRR...',
@@ -206,6 +233,10 @@
     hsBig: makeSprite(hammerSickle, 3),
     star: makeSprite(star, 2),
     starIcon: makeSprite(star, 1),
+    leninRide: makeSprite(leninTop, 2, false),
+    horseA: makeSprite(horseA, 2),
+    horseB: makeSprite(horseB, 2),
+    horseDead: makeSprite(horseDead, 2),
     bolA: makeSprite(bolA, 2),
     bolB: makeSprite(bolB, 2),
   };
@@ -234,6 +265,8 @@
   const sfx = {
     jump: () => tone(220, 880, 0.15),
     point: () => { tone(660, 660, 0.08); tone(990, 990, 0.12, 'square', 0.08, 0.09); },
+    mount: () => [392, 523, 659, 784].forEach((f, i) => tone(f, f, 0.08, 'square', 0.07, i * 0.06)),
+    neigh: () => { tone(900, 500, 0.12, 'sawtooth', 0.07); tone(800, 300, 0.25, 'sawtooth', 0.07, 0.12); tone(200, 50, 0.3, 'triangle', 0.12, 0.35); },
     coin: () => { tone(988, 988, 0.05, 'square', 0.07); tone(1319, 1319, 0.14, 'square', 0.07, 0.05); },
     die: () => { tone(440, 55, 0.6, 'sawtooth', 0.1); tone(300, 40, 0.6, 'square', 0.06, 0.05); },
   };
@@ -264,10 +297,12 @@
   // ---- Game state ----
   const STATE = { TITLE: 0, PLAY: 1, OVER: 2 };
   let state = STATE.TITLE;
-  let player, obstacles, stars, popups, starCount, speed, score, nextSpawn, skyOff, frame, flash, overTimer, blink;
+  let player, obstacles, stars, popups, horses, corpses, starCount, speed, score, nextSpawn, skyOff, frame, flash, overTimer, blink;
 
   function reset() {
-    player = { x: 28, y: GROUND - 36, vy: 0, w: 24, h: 36, onGround: true };
+    player = { x: 28, y: GROUND - 36, vy: 0, w: 24, h: 36, onGround: true, riding: false, invuln: 0 };
+    horses = [];
+    corpses = [];
     obstacles = [];
     stars = [];
     popups = [];
@@ -281,10 +316,20 @@
   }
   reset();
 
+  // Horse riding changes Lenin's size; keep his feet where they are
+  function setRiding(on) {
+    const bottom = player.y + player.h;
+    player.riding = on;
+    player.w = on ? 44 : 24;
+    player.h = on ? 42 : 36;
+    player.y = bottom - player.h;
+  }
+
   function addStar(x, y) {
     stars.push({ x, y, w: 22, h: 18, t: Math.random() * 60 });
   }
 
+  const HORSE_SCORE = 150;
   function spawn() {
     const r = Math.random();
     const x0 = W + 10;
@@ -312,7 +357,11 @@
     const minGap = 110 + speed * 14;
     nextSpawn = minGap + Math.random() * 160;
     // Red star on the ground in the gap before the next obstacle
-    if (Math.random() < 0.35) addStar(x0 + width + nextSpawn * 0.5, GROUND - 22);
+    const gapMid = x0 + width + nextSpawn * 0.5;
+    if (!player.riding && horses.length === 0 && score > HORSE_SCORE && Math.random() < 0.2) {
+      // A riderless horse waits in the gap: run into it to mount
+      horses.push({ x: gapMid - 22, y: GROUND - 32, w: 44, h: 32, t: 0 });
+    } else if (Math.random() < 0.35) addStar(gapMid, GROUND - 22);
   }
 
   // ---- Input ----
@@ -405,8 +454,36 @@
     for (const pp of popups) { pp.t += dt; pp.y -= 0.5 * dt; }
     popups = popups.filter(pp => pp.t < 40);
 
+    for (const hs of horses) {
+      hs.x -= move;
+      hs.t += dt;
+      if (!player.riding && hit(player, hs)) {
+        hs.taken = true;
+        setRiding(true);
+        sfx.mount();
+        popups.push({ x: hs.x + 22, y: hs.y - 6, t: 0, label: 'HORSE!' });
+      }
+    }
+    horses = horses.filter(hs => !hs.taken && hs.x + hs.w > -10);
+    for (const c of corpses) c.x -= move;
+    corpses = corpses.filter(c => c.x > -50);
+    if (player.invuln > 0) player.invuln -= dt;
+
     for (const o of obstacles) {
-      if (hit(player, o)) {
+      if (player.invuln > 0 || !hit(player, o)) continue;
+      if (player.riding) {
+        // The horse takes the hit: it dies, the obstacle is crushed, Lenin keeps going
+        o.crushed = true;
+        corpses.push({ x: player.x, y: GROUND - 30 });
+        setRiding(false);
+        player.vy = -6;
+        player.onGround = false;
+        player.invuln = 70;
+        sfx.neigh();
+        popups.push({ x: player.x + 30, y: GROUND - 36, t: 0, label: 'RIP HORSE' });
+        continue;
+      }
+      {
         state = STATE.OVER;
         overTimer = 0;
         if (Math.floor(score) > hi) { hi = Math.floor(score); saveHi(); }
@@ -414,6 +491,7 @@
         return;
       }
     }
+    obstacles = obstacles.filter(o => !o.crushed);
 
     const before = Math.floor(score / 100);
     score += 0.18 * dt * (speed / 3.6);
@@ -456,7 +534,24 @@
     for (const g of groundBits) ctx.fillRect(Math.floor(g.x), g.y, g.w, 1);
   }
 
+  function drawHorses() {
+    for (const c of corpses) ctx.drawImage(SPR.horseDead, Math.floor(c.x), c.y);
+    for (const hs of horses) {
+      // grazing: head dips now and then
+      const dip = Math.floor(hs.t / 25) % 3 === 0 ? 2 : 0;
+      ctx.drawImage(SPR.horseA, Math.floor(hs.x), Math.floor(hs.y) + dip);
+    }
+  }
+
   function drawPlayer() {
+    if (player.invuln > 0 && state === STATE.PLAY && Math.floor(player.invuln / 4) % 2) return;
+    if (player.riding) {
+      const gallop = state === STATE.PLAY && player.onGround ? Math.floor(frame / 5) % 2 : 0;
+      const bounce = gallop ? 1 : 0;
+      ctx.drawImage(gallop ? SPR.horseB : SPR.horseA, Math.floor(player.x), Math.floor(player.y) + 10);
+      ctx.drawImage(SPR.leninRide, Math.floor(player.x) + 10, Math.floor(player.y) - bounce);
+      return;
+    }
     let spr;
     if (state === STATE.OVER) spr = SPR.dead;
     else if (!player.onGround) spr = SPR.jump;
@@ -482,7 +577,7 @@
         ctx.fillRect(Math.floor(st.x) + 10, Math.floor(st.y) + bob + 4, 2, 2);
       }
     }
-    for (const pp of popups) text('+25', Math.floor(pp.x), Math.floor(pp.y), C.yellow, 'center');
+    for (const pp of popups) text(pp.label || '+25', Math.floor(pp.x), Math.floor(pp.y), pp.label === 'RIP HORSE' ? C.lgrey : C.yellow, 'center');
   }
 
   function drawHUD() {
@@ -501,6 +596,7 @@
     text('LENIN JUMP', W / 2, 98, C.yellow, 'center');
     if (Math.floor(blink / 30) % 2 === 0)
       text('PRESS SPACE / TAP TO START', W / 2, 116, C.white, 'center');
+    text('FIND A HORSE: IT TAKES ONE HIT', W / 2, 132, C.lgreen, 'center');
     text('JUMP HAMMERS & BOLSHEVIKS', W / 2, 184, C.lgrey, 'center');
     text('GRAB THE RED STARS: +25', W / 2, 196, C.lred, 'center');
   }
@@ -520,6 +616,7 @@
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.textBaseline = 'alphabetic';
     drawWorld();
+    drawHorses();
     drawObstacles();
     drawStars();
     drawPlayer();
