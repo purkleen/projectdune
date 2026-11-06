@@ -62,7 +62,7 @@
 
   // ---- Sprites ----
   // K black, S skin, H hair, B suit, R red, W white, Y yellow, D dark grey
-  const PAL = { K: C.black, S: C.lred, H: C.orange, B: C.dgrey, R: C.red, W: C.white, Y: C.yellow, D: C.grey, G: C.lgrey };
+  const PAL = { O: C.brown, V: C.green, K: C.black, S: C.lred, H: C.orange, B: C.dgrey, R: C.red, W: C.white, Y: C.yellow, D: C.grey, G: C.lgrey };
 
   const leninTop = [
     '....KKKK....',
@@ -133,6 +133,34 @@
     'Y............',
   ];
 
+  const bolTop = [
+    '.....KK.....',
+    '....KVVK....',
+    '...KVVVVK...',
+    '..KVVRRVVK.G',
+    '..KVVRRVVK.G',
+    '..KKKKKKKK.G',
+    '..KSSSSSSK.O',
+    '..KSKSSKSK.O',
+    '..KSSSSSSK.O',
+    '...KSSSSK..O',
+    '..VVVVVVVV.O',
+    '.VVVVVVVVVSO',
+    '.VVVRVVVVV.O',
+    '.VVVVVVVVV.O',
+    '.VVVVVVVVV..',
+  ];
+  const bolA = bolTop.concat([
+    '..VVV..VVV..',
+    '.VVV....VV..',
+    'KKK.....KKK.',
+  ]);
+  const bolB = bolTop.concat([
+    '...VVVVVV...',
+    '....VVVV....',
+    '...KKKKK....',
+  ]);
+
   const star = [
     '....R....',
     '...RRR...',
@@ -177,6 +205,9 @@
     hsSmall: makeSprite(hammerSickle, 2),
     hsBig: makeSprite(hammerSickle, 3),
     star: makeSprite(star, 2),
+    starIcon: makeSprite(star, 1),
+    bolA: makeSprite(bolA, 2),
+    bolB: makeSprite(bolB, 2),
   };
 
   // ---- Sound: SID-ish square waves ----
@@ -203,6 +234,7 @@
   const sfx = {
     jump: () => tone(220, 880, 0.15),
     point: () => { tone(660, 660, 0.08); tone(990, 990, 0.12, 'square', 0.08, 0.09); },
+    coin: () => { tone(988, 988, 0.05, 'square', 0.07); tone(1319, 1319, 0.14, 'square', 0.07, 0.05); },
     die: () => { tone(440, 55, 0.6, 'sawtooth', 0.1); tone(300, 40, 0.6, 'square', 0.06, 0.05); },
   };
 
@@ -232,11 +264,14 @@
   // ---- Game state ----
   const STATE = { TITLE: 0, PLAY: 1, OVER: 2 };
   let state = STATE.TITLE;
-  let player, obstacles, speed, score, nextSpawn, skyOff, frame, flash, overTimer, blink;
+  let player, obstacles, stars, popups, starCount, speed, score, nextSpawn, skyOff, frame, flash, overTimer, blink;
 
   function reset() {
     player = { x: 28, y: GROUND - 36, vy: 0, w: 24, h: 36, onGround: true };
     obstacles = [];
+    stars = [];
+    popups = [];
+    starCount = 0;
     speed = 3.6;
     score = 0;
     nextSpawn = 80;
@@ -246,22 +281,38 @@
   }
   reset();
 
+  function addStar(x, y) {
+    stars.push({ x, y, w: 22, h: 18, t: Math.random() * 60 });
+  }
+
   function spawn() {
     const r = Math.random();
-    if (score > 300 && r < 0.18) {
-      // A flying red star: low enough that you must jump it
-      obstacles.push({ type: 'star', x: W + 10, y: GROUND - 34 - Math.random() * 6, w: 22, h: 18, spr: SPR.star, t: 0 });
-    } else if (r < 0.55) {
-      obstacles.push({ type: 'hs', x: W + 10, y: GROUND - 30, w: 30, h: 30, spr: SPR.hsSmall });
-    } else if (r < 0.8) {
+    const x0 = W + 10;
+    let width = 30, height = 30;
+    if (score > 100 && r < 0.28) {
+      // Marching Bolshevik(s), walking toward Lenin
+      const n = score > 400 && Math.random() < 0.35 ? 2 : 1;
+      for (let i = 0; i < n; i++)
+        obstacles.push({ type: 'bol', x: x0 + i * 30, y: GROUND - 40, w: 28, h: 40, t: Math.random() * 12 });
+      width = n * 30; height = 40;
+    } else if (r < 0.6) {
+      obstacles.push({ type: 'hs', x: x0, y: GROUND - 30, w: 30, h: 30, spr: SPR.hsSmall });
+    } else if (r < 0.82) {
       const n = score > 150 ? 2 + (Math.random() < 0.4 ? 1 : 0) : 2;
       for (let i = 0; i < n; i++)
-        obstacles.push({ type: 'hs', x: W + 10 + i * 26, y: GROUND - 30, w: 30, h: 30, spr: SPR.hsSmall });
+        obstacles.push({ type: 'hs', x: x0 + i * 26, y: GROUND - 30, w: 30, h: 30, spr: SPR.hsSmall });
+      width = n * 26 + 4;
     } else {
-      obstacles.push({ type: 'hs', x: W + 10, y: GROUND - 45, w: 45, h: 45, spr: SPR.hsBig });
+      obstacles.push({ type: 'hs', x: x0, y: GROUND - 45, w: 45, h: 45, spr: SPR.hsBig });
+      width = 45; height = 45;
     }
+    // Red star floating above the obstacle: grab it mid-jump
+    if (Math.random() < 0.4) addStar(x0 + width / 2 - 11, GROUND - height - 34);
+
     const minGap = 110 + speed * 14;
     nextSpawn = minGap + Math.random() * 160;
+    // Red star on the ground in the gap before the next obstacle
+    if (Math.random() < 0.35) addStar(x0 + width + nextSpawn * 0.5, GROUND - 22);
   }
 
   // ---- Input ----
@@ -332,10 +383,27 @@
     if (nextSpawn <= 0) spawn();
 
     for (const o of obstacles) {
-      o.x -= move * (o.type === 'star' ? 1.15 : 1);
-      if (o.type === 'star') { o.t += dt; }
+      o.x -= move * (o.type === 'bol' ? 1.12 : 1);
+      if (o.type === 'bol') o.t += dt;
     }
     obstacles = obstacles.filter(o => o.x + o.w > -10);
+
+    // red stars: collect for bonus points
+    for (const st of stars) {
+      st.x -= move;
+      st.t += dt;
+      if (!st.got && player.x + 2 < st.x + st.w && player.x + player.w - 2 > st.x &&
+          player.y < st.y + st.h && player.y + player.h > st.y) {
+        st.got = true;
+        starCount++;
+        score += 25;
+        sfx.coin();
+        popups.push({ x: st.x + 11, y: st.y, t: 0 });
+      }
+    }
+    stars = stars.filter(st => !st.got && st.x + st.w > -10);
+    for (const pp of popups) { pp.t += dt; pp.y -= 0.5 * dt; }
+    popups = popups.filter(pp => pp.t < 40);
 
     for (const o of obstacles) {
       if (hit(player, o)) {
@@ -399,13 +467,28 @@
 
   function drawObstacles() {
     for (const o of obstacles) {
-      const bob = o.type === 'star' ? Math.round(Math.sin(o.t / 6) * 2) : 0;
-      ctx.drawImage(o.spr, Math.floor(o.x), Math.floor(o.y) + bob);
+      const spr = o.type === 'bol' ? (Math.floor(o.t / 7) % 2 ? SPR.bolA : SPR.bolB) : o.spr;
+      ctx.drawImage(spr, Math.floor(o.x), Math.floor(o.y));
     }
+  }
+
+  function drawStars() {
+    for (const st of stars) {
+      // twinkle: blink a white glint
+      const bob = Math.round(Math.sin(st.t / 8) * 2);
+      ctx.drawImage(SPR.star, Math.floor(st.x), Math.floor(st.y) + bob);
+      if (Math.floor(st.t / 10) % 4 === 0) {
+        ctx.fillStyle = C.white;
+        ctx.fillRect(Math.floor(st.x) + 10, Math.floor(st.y) + bob + 4, 2, 2);
+      }
+    }
+    for (const pp of popups) text('+25', Math.floor(pp.x), Math.floor(pp.y), C.yellow, 'center');
   }
 
   function drawHUD() {
     const showScore = !(flash > 0 && Math.floor(flash / 5) % 2);
+    ctx.drawImage(SPR.starIcon, 8, 6);
+    text('x' + starCount, 22, 14, C.white);
     text('HI ' + pad5(hi), 196, 14, C.lgrey, 'right');
     if (showScore) text(pad5(score), 312, 14, C.white, 'right');
   }
@@ -418,7 +501,8 @@
     text('LENIN JUMP', W / 2, 98, C.yellow, 'center');
     if (Math.floor(blink / 30) % 2 === 0)
       text('PRESS SPACE / TAP TO START', W / 2, 116, C.white, 'center');
-    text('JUMP OVER THE HAMMERS & SICKLES', W / 2, 192, C.lgrey, 'center');
+    text('JUMP HAMMERS & BOLSHEVIKS', W / 2, 184, C.lgrey, 'center');
+    text('GRAB THE RED STARS: +25', W / 2, 196, C.lred, 'center');
   }
 
   function drawOver() {
@@ -437,6 +521,7 @@
     ctx.textBaseline = 'alphabetic';
     drawWorld();
     drawObstacles();
+    drawStars();
     drawPlayer();
     if (state !== STATE.TITLE) drawHUD();
     if (state === STATE.TITLE) drawTitle();
