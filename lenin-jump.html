@@ -293,6 +293,7 @@
     neigh: () => { tone(900, 500, 0.12, 'sawtooth', 0.07); tone(800, 300, 0.25, 'sawtooth', 0.07, 0.12); tone(200, 50, 0.3, 'triangle', 0.12, 0.35); },
     stomp: () => { tone(160, 40, 0.12, 'square', 0.12); tone(523, 1046, 0.12, 'square', 0.06, 0.08); },
     shot: () => { noise(0.25, 0.2); tone(180, 60, 0.15, 'square', 0.06); },
+    fanfare: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, f, i === 5 ? 0.5 : 0.12, 'square', 0.08, i * 0.13)),
     coin: () => { tone(988, 988, 0.05, 'square', 0.07); tone(1319, 1319, 0.14, 'square', 0.07, 0.05); },
     die: () => { tone(440, 55, 0.6, 'sawtooth', 0.1); tone(300, 40, 0.6, 'square', 0.06, 0.05); },
   };
@@ -396,27 +397,93 @@
     onion(bx + 96, GROUND - 76, 1.5, C.purple, C.lgreen, GROUND - 40);
   })();
 
+  // ---- Level 2 backdrop: the Gulag (barracks, watchtowers, barbed wire) ----
+  const BG2 = document.createElement('canvas');
+  BG2.width = BG_W; BG2.height = H;
+  const TOWERS2 = [250, 560];          // watchtower x positions (for searchlights)
+  let bg2Painted = false;
+  function paintGulag() {
+    if (bg2Painted) return;
+    bg2Painted = true;
+    const g = BG2.getContext('2d');
+    const rect = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    // snowy pines in the distance
+    for (let x = 4; x < BG_W; x += 13) {
+      const h = 26 + ((x * 37) % 22), base = GROUND - 18;
+      for (let y = 0; y < h; y++) {
+        const hw = Math.max(1, Math.round((y / h) * 7));
+        rect(x - hw, base - h + y, hw * 2, 1, (y % 6 === 0) ? C.lgrey : C.dgrey);
+      }
+      rect(x - 1, base, 2, 4, C.brown);
+    }
+    // barracks with snowy roofs and lit windows
+    for (const [bx, bw] of [[24, 150], [360, 150]]) {
+      rect(bx, GROUND - 30, bw, 30, C.brown);
+      for (let y = GROUND - 26; y < GROUND; y += 5) rect(bx, y, bw, 1, C.orange);
+      rect(bx - 4, GROUND - 34, bw + 8, 4, C.white);
+      rect(bx, GROUND - 38, bw, 4, C.white);
+      for (let x = bx + 8; x < bx + bw - 8; x += 18) { rect(x, GROUND - 22, 6, 6, C.yellow); rect(x + 2, GROUND - 22, 1, 6, C.brown); }
+      rect(bx + 20, GROUND - 48, 6, 10, C.dgrey);
+    }
+    // watchtowers
+    for (const tx of TOWERS2) {
+      rect(tx - 10, GROUND - 70, 2, 70, C.brown);
+      rect(tx + 8, GROUND - 70, 2, 70, C.brown);
+      for (let y = GROUND - 66; y < GROUND; y += 16)
+        for (let i = 0; i < 16; i++) rect(tx - 8 + i, y + i, 1, 1, C.orange);
+      rect(tx - 14, GROUND - 90, 28, 20, C.brown);
+      rect(tx - 12, GROUND - 86, 24, 5, C.black);
+      rect(tx - 16, GROUND - 72, 32, 2, C.orange);
+      for (let y = 0; y < 10; y++) rect(tx - 16 + y * 1.6, GROUND - 100 + y, 32 - y * 3.2, 1, C.white);
+      rect(tx - 3, GROUND - 86, 6, 4, C.yellow);                 // searchlight lamp
+    }
+    // camp sign
+    rect(298, GROUND - 68, 2, 68, C.brown); rect(344, GROUND - 68, 2, 68, C.brown);
+    rect(292, GROUND - 70, 60, 14, C.white);
+    g.font = '8px "Press Start 2P", monospace'; g.textAlign = 'center'; g.fillStyle = C.black;
+    g.fillText('GULAG', 322, GROUND - 59);
+    // barbed-wire fence
+    for (let x = 6; x < BG_W; x += 32) { rect(x, GROUND - 46, 3, 46, C.brown); rect(x - 3, GROUND - 48, 4, 2, C.brown); }
+    for (const wy of [GROUND - 42, GROUND - 32, GROUND - 22, GROUND - 12]) {
+      rect(0, wy, BG_W, 1, C.lgrey);
+      for (let x = (wy % 8); x < BG_W; x += 8) { rect(x, wy - 1, 1, 3, C.lgrey); rect(x - 1, wy, 3, 1, C.white); }
+    }
+  }
+  const snow = Array.from({ length: 70 }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 0.3 + Math.random() * 0.7 }));
+
+  const LEVELS = [
+    { name: 'RED SQUARE', end: 500 },
+    { name: 'GULAG', end: 1000 },
+  ];
+  const SPEED = 4.2;                    // constant: the game no longer speeds up
+
   const groundBits = Array.from({ length: 40 }, () => ({
     x: Math.random() * W, y: GROUND + 4 + Math.floor(Math.random() * 20), w: 1 + Math.floor(Math.random() * 3)
   }));
 
   // ---- Game state ----
-  const STATE = { TITLE: 0, PLAY: 1, OVER: 2 };
+  const STATE = { TITLE: 0, PLAY: 1, OVER: 2, CLEAR: 3, WIN: 4 };
   let state = STATE.TITLE;
+  let level = 1, levelStart = { score: 0, stars: 0 }, banner = 0;
   let player, obstacles, stars, popups, horses, corpses, starCount, speed, score, nextSpawn, skyOff, frame, flash, overTimer, blink;
 
-  function reset() {
+  // Start (or restart) a level; score and stars carry over from where the level began
+  function reset(lv = 1) {
+    if (lv === 1) levelStart = { score: 0, stars: 0 };
+    level = lv;
+    if (lv === 2) paintGulag();
+    banner = 150;
     player = { x: 28, y: GROUND - 36, vy: 0, w: 24, h: 36, onGround: true, riding: false, invuln: 0 };
     horses = [];
     corpses = [];
     obstacles = [];
     stars = [];
     popups = [];
-    starCount = 0;
-    speed = 3.6;
-    score = 0;
+    starCount = levelStart.stars;
+    speed = SPEED;
+    score = levelStart.score;
     nextSpawn = 80;
-    skyOff = 150;
+    skyOff = lv === 1 ? 150 : 0;
     frame = 0;
     flash = 0;
   }
@@ -474,8 +541,19 @@
   let holding = false;
   function press() {
     audio();
-    if (state === STATE.TITLE) { reset(); state = STATE.PLAY; return; }
-    if (state === STATE.OVER) { if (overTimer > 25) { reset(); state = STATE.PLAY; } return; }
+    if (state === STATE.TITLE) { reset(1); state = STATE.PLAY; return; }
+    if (state === STATE.OVER) { if (overTimer > 25) { reset(level); state = STATE.PLAY; } return; }
+    if (state === STATE.CLEAR) {
+      if (overTimer > 40) {
+        levelStart = { score: LEVELS[level - 1].end, stars: starCount };
+        const riding = player.riding;
+        reset(level + 1);
+        if (riding) setRiding(true);   // keep the horse into the next level
+        state = STATE.PLAY;
+      }
+      return;
+    }
+    if (state === STATE.WIN) { if (overTimer > 40) state = STATE.TITLE; return; }
     holding = true;
     if (player.onGround) {
       player.vy = -8.6;
@@ -509,11 +587,16 @@
 
   function update(dt) {
     blink += dt;
-    if (state === STATE.OVER) { overTimer += dt; return; }
+    for (const f of snow) {                // snowfall (drawn in the Gulag only)
+      f.y += f.v * dt; f.x -= (state === STATE.PLAY ? speed * 0.4 : 0.3) * dt;
+      if (f.y > H) { f.y = -2; f.x = Math.random() * W; }
+      if (f.x < 0) f.x += W;
+    }
+    if (state === STATE.OVER || state === STATE.CLEAR || state === STATE.WIN) { overTimer += dt; return; }
     if (state !== STATE.PLAY) return;
     frame += dt;
+    if (banner > 0) banner -= dt;
 
-    speed = Math.min(9.5, speed + 0.0016 * dt);
     const move = speed * dt;
 
     // player physics
@@ -631,9 +714,18 @@
     obstacles = obstacles.filter(o => !o.crushed);
 
     const before = Math.floor(score / 100);
-    score += 0.18 * dt * (speed / 3.6);
+    score += 0.2 * dt;
     if (Math.floor(score / 100) > before) { sfx.point(); flash = 40; }
     if (flash > 0) flash -= dt;
+
+    // Reaching the level's last line ends the level
+    if (score >= LEVELS[level - 1].end) {
+      score = LEVELS[level - 1].end;
+      state = level < LEVELS.length ? STATE.CLEAR : STATE.WIN;
+      overTimer = 0;
+      if (score > hi) { hi = score; saveHi(); }
+      sfx.fanfare();
+    }
   }
 
   // ---- Draw ----
@@ -645,6 +737,7 @@
   const pad5 = n => String(Math.floor(n)).padStart(5, '0');
 
   function drawWorld() {
+    if (level === 2) return drawGulag();
     ctx.fillStyle = C.blue;
     ctx.fillRect(0, 0, W, H);
 
@@ -667,6 +760,43 @@
     ctx.fillRect(0, GROUND, W, 2);
     ctx.fillStyle = C.grey;
     for (const g of groundBits) ctx.fillRect(Math.floor(g.x), g.y, g.w, 1);
+  }
+
+  function drawGulag() {
+    ctx.fillStyle = C.black;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = C.dgrey;                       // cold moon
+    ctx.fillRect(60, 28, 16, 16); ctx.fillRect(56, 32, 24, 8); ctx.fillRect(64, 24, 8, 24);
+    const bx = Math.floor(-skyOff);
+    // sweeping searchlight beams
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = C.yellow;
+    TOWERS2.forEach((tx, i) => {
+      for (const off of [bx, bx + BG_W]) {
+        const lx = tx + off, ly = GROUND - 84;
+        if (lx < -200 || lx > W + 200) continue;
+        const aim = lx + Math.sin(blink / 50 + i * 2) * 90;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly); ctx.lineTo(aim - 22, GROUND); ctx.lineTo(aim + 22, GROUND);
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+    ctx.drawImage(BG2, bx, 0);
+    ctx.drawImage(BG2, bx + BG_W, 0);
+    // snow on the ground
+    ctx.fillStyle = C.white;
+    ctx.fillRect(0, GROUND, W, H - GROUND);
+    ctx.fillStyle = C.lgrey;
+    ctx.fillRect(0, GROUND, W, 1);
+    for (const g of groundBits) ctx.fillRect(Math.floor(g.x), g.y, g.w, 1);
+  }
+
+  function drawSnow() {
+    if (level !== 2) return;
+    ctx.fillStyle = C.white;
+    for (const f of snow) ctx.fillRect(Math.floor(f.x), Math.floor(f.y), f.v > 0.7 ? 2 : 1, f.v > 0.7 ? 2 : 1);
   }
 
   function drawHorses() {
@@ -736,6 +866,16 @@
     const showScore = !(flash > 0 && Math.floor(flash / 5) % 2);
     ctx.drawImage(SPR.starIcon, 8, 6);
     text('x' + starCount, 22, 14, C.white);
+    text('LV' + level, 60, 14, C.yellow);
+    // progress through the level toward its last line
+    const L = LEVELS[level - 1], from = level === 1 ? 0 : LEVELS[level - 2].end;
+    const prog = Math.max(0, Math.min(1, (score - from) / (L.end - from)));
+    ctx.fillStyle = C.dgrey; ctx.fillRect(8, 20, W - 16, 2);
+    ctx.fillStyle = C.yellow; ctx.fillRect(8, 20, Math.floor((W - 16) * prog), 2);
+    if (banner > 0 && state === STATE.PLAY) {
+      text('LEVEL ' + level + ': ' + L.name, W / 2, 50, C.yellow, 'center');
+      text('REACH LINE ' + L.end, W / 2, 64, C.white, 'center');
+    }
     text('HI ' + pad5(hi), 196, 14, C.lgrey, 'right');
     if (showScore) text(pad5(score), 312, 14, C.white, 'right');
   }
@@ -748,7 +888,7 @@
     text('LENIN JUMP', W / 2, 98, C.yellow, 'center');
     if (Math.floor(blink / 30) % 2 === 0)
       text('PRESS SPACE / TAP TO START', W / 2, 116, C.white, 'center');
-    text('FIND A HORSE: IT TAKES ONE HIT', W / 2, 132, C.lgreen, 'center');
+    text('REACH LINE 500 TO CLEAR A LEVEL', W / 2, 132, C.lgreen, 'center');
     text('JUMP HAMMERS, STOMP BOLSHEVIKS', W / 2, 184, C.lgrey, 'center');
     text('GRAB THE RED STARS: +25', W / 2, 196, C.lred, 'center');
   }
@@ -764,6 +904,31 @@
       text('SPACE / TAP TO RETRY', W / 2, 112, C.white, 'center');
   }
 
+  function box(lines) {
+    const h = 16 + lines.length * 12;
+    const y0 = 60;
+    ctx.fillStyle = C.black;
+    ctx.fillRect(40, y0, 240, h);
+    ctx.fillStyle = C.lblue;
+    ctx.fillRect(40, y0, 240, 2); ctx.fillRect(40, y0 + h - 2, 240, 2);
+    lines.forEach(([t, c], i) => { if (t) text(t, W / 2, y0 + 16 + i * 12, c, 'center'); });
+  }
+  function drawClear() {
+    const ready = overTimer > 40 && Math.floor(blink / 30) % 2 === 0;
+    if (state === STATE.CLEAR) box([
+      ['LEVEL ' + level + ' COMPLETE', C.yellow],
+      [LEVELS[level - 1].name + ' CLEARED', C.lgreen],
+      ['NEXT STOP: ' + LEVELS[level].name, C.lred],
+      [ready ? 'SPACE / TAP TO GO ON' : '', C.white],
+    ]);
+    else box([
+      ['LENIN ESCAPED THE GULAG!', C.yellow],
+      ['THE END', C.lgreen],
+      ['STARS: ' + starCount + '  LINES: ' + Math.floor(score), C.lblue],
+      [ready ? 'SPACE / TAP: MAIN MENU' : '', C.white],
+    ]);
+  }
+
   function draw() {
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.textBaseline = 'alphabetic';
@@ -772,7 +937,9 @@
     drawObstacles();
     drawStars();
     drawPlayer();
+    drawSnow();
     if (state !== STATE.TITLE) drawHUD();
+    if (state === STATE.CLEAR || state === STATE.WIN) drawClear();
     if (state === STATE.TITLE) drawTitle();
     if (state === STATE.OVER) drawOver();
   }
