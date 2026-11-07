@@ -438,10 +438,10 @@
       rect(tx - 3, GROUND - 86, 6, 4, C.yellow);                 // searchlight lamp
     }
     // camp sign
-    rect(298, GROUND - 68, 2, 68, C.brown); rect(344, GROUND - 68, 2, 68, C.brown);
-    rect(292, GROUND - 70, 60, 14, C.white);
+    rect(278, GROUND - 68, 2, 68, C.brown); rect(364, GROUND - 68, 2, 68, C.brown);
+    rect(268, GROUND - 70, 108, 14, C.white);
     g.font = '8px "Press Start 2P", monospace'; g.textAlign = 'center'; g.fillStyle = C.black;
-    g.fillText('GULAG', 322, GROUND - 59);
+    g.fillText('ЗА КОММУНИЗМ', 322, GROUND - 59);
     // barbed-wire fence
     for (let x = 6; x < BG_W; x += 32) { rect(x, GROUND - 46, 3, 46, C.brown); rect(x - 3, GROUND - 48, 4, 2, C.brown); }
     for (const wy of [GROUND - 42, GROUND - 32, GROUND - 22, GROUND - 12]) {
@@ -956,7 +956,8 @@
   }
   const start = () => requestAnimationFrame(t => { last = t; loop(t); });
   if (document.fonts && document.fonts.load) {
-    document.fonts.load('8px "Press Start 2P"').then(start, start);
+    // also fetch the Cyrillic glyphs used on the Gulag sign
+    Promise.all([document.fonts.load('8px "Press Start 2P"'), document.fonts.load('8px "Press Start 2P"', 'ЗА КОММУНИЗМ')]).then(start, start);
   } else start();
 })();
 </script>
